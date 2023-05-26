@@ -3,6 +3,7 @@ from vpython import *
 #Constants
 runRate = 50 #50 times a second
 elasticity = 1
+gameMode = ""
 #Background
 scene.background = vector(0,0,0) #RGB but out of 1
 
@@ -61,6 +62,7 @@ class Puck:
         self.shape.pos = self.position
         print(self.velocity)
 
+#FOR AIR HOCKEY STRETCH GOAL
 class ForceCreator:
     def __init__(self, position, charge):
         self.position = position
@@ -69,6 +71,15 @@ class ForceCreator:
     def update(self):
         self.position = scene.mouse.pos
         self.shape.pos = self.position
+
+class Charges:
+    def __init__(self, position, charge):
+        self.position = position
+        self.charge = charge
+        self.shape = cylinder(pos=self.position, axis=vector(0,0,1), radius=5)
+    def createElectricField(self):
+        return 0  
+
         
 
 def ray_tracing_method(x,y,poly):
@@ -104,5 +115,6 @@ while(True):
     rate(runRate)
     puck.update(forcer)
     forcer.update()
+    #when click and drag add a new point charge to a list, then run the loop through puck and update everyone
    
     
