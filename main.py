@@ -69,6 +69,8 @@ class ForceCreator:
     def update(self):
         self.position = scene.mouse.pos
         self.shape.pos = self.position
+        
+
 def ray_tracing_method(x,y,poly):
     print(poly)
     n = 8
