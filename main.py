@@ -13,7 +13,8 @@ boundaryRight3D = box(pos=vector(200, 0, 0), length=5, width=5, height=200)
 boundaryTop3D = box(pos=vector(0, 100, 0), length=405, width=5, height=5)  
 boundaryBottom3D = box(pos=vector(0, -100, 0), length=405, width=5, height=5)  
 
-
+# TODO: LIST:
+#   1. BOUNDARY MATH FOR GOAL IS NOT RIGHT!
 
 class Puck:
     def __init__(self, mass, velocity, position, charge, radius):
@@ -62,7 +63,6 @@ class Puck:
             self.velocity = self.velocity + (self.netForce / self.mass) * (1 / runRate)
         self.position = self.position + self.velocity
         self.shape.pos = self.position
-        print(self.velocity)
 
 #FOR AIR HOCKEY STRETCH GOAL
 class ForceCreator:
@@ -98,7 +98,11 @@ class Goal:
     def __init__(self, position):
         self.position = position
         self.shape = [box(pos=self.position, length=20, width=1, height=5), box(pos=self.position + vector(10, 20, 0), length = 5, width = 1, height = 44), box(pos=self.position + vector(0, 40, 0), length = 20, width = 1, height = 5)]
-
+    def inGoal(self, puck):
+        
+        if (puck.position.x + 5 > self.position.x - 10 and puck.position.x + 5 < self.position.x + 10 and puck.position.y + 5 < self.position.y + 40 and puck.position.y > self.position.y):
+            print("GOALLLLL")
+            
         
 
 def ray_tracing_method(x,y,poly):
@@ -145,6 +149,7 @@ while(True):
         rate(runRate)
         puck.update(forcer)
         forcer.update()
+        goal.inGoal(forcer)
     #when click and drag add a new point charge to a list, then run the loop through puck and update everyone
    
     
