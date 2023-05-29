@@ -86,17 +86,18 @@ class Obstacles:
     def __init__(self, position, charge):
         self.position = position
         self.charge = charge
-    
+
+#INHERITENCE DONT WORKKK
 class BoxObstacle(Obstacles):
     def __init__(self, position, charge, length, width):
         self.shape = box(pos=self.position, length = self.length, width=self.width, height=5)
     def getVertices(self):
         return self.shape.bounding_box()
     
-class Goal():
+class Goal:
     def __init__(self, position):
-        self.shape = [box(pos=self.position, length=5, width=5, height=5), box(pos=self.position + 10, length = 5, width = 5, height = 5)]
-        # self.shaape = box(pos=self.position, length=5, width=5, height=5)
+        self.position = position
+        self.shape = [box(pos=self.position, length=20, width=1, height=5), box(pos=self.position + vector(10, 20, 0), length = 5, width = 1, height = 44), box(pos=self.position + vector(0, 40, 0), length = 20, width = 1, height = 5)]
 
         
 
