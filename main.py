@@ -3,15 +3,17 @@ from vpython import *
 #Constants
 runRate = 50 #50 times a second
 elasticity = 1
-gameMode = ""
+gameMode = "Simulation"
 #Background
 scene.background = vector(0,0,0) #RGB but out of 1
 
-#3D shapes
-boundaryLeft3D = box(pos=vector(-100, 0, 0), length=5, width=5, height=100) 
-boundaryRight3D = box(pos=vector(100, 0, 0), length=5, width=5, height=100)  
-boundaryTop3D = box(pos=vector(0, 50, 0), length=205, width=5, height=5)  
-boundaryBottom3D = box(pos=vector(0, -50, 0), length=205, width=5, height=5)  
+#Boundaries
+boundaryLeft3D = box(pos=vector(-200, 0, 0), length=5, width=5, height=200) 
+boundaryRight3D = box(pos=vector(200, 0, 0), length=5, width=5, height=200)  
+boundaryTop3D = box(pos=vector(0, 100, 0), length=405, width=5, height=5)  
+boundaryBottom3D = box(pos=vector(0, -100, 0), length=405, width=5, height=5)  
+
+
 
 class Puck:
     def __init__(self, mass, velocity, position, charge, radius):
@@ -80,6 +82,22 @@ class Charges:
     def createElectricField(self):
         return 0  
 
+class Obstacles:
+    def __init__(self, position, charge):
+        self.position = position
+        self.charge = charge
+    
+class BoxObstacle(Obstacles):
+    def __init__(self, position, charge, length, width):
+        self.shape = box(pos=self.position, length = self.length, width=self.width, height=5)
+    def getVertices(self):
+        return self.shape.bounding_box()
+    
+class Goal():
+    def __init__(self, position):
+        self.shape = [box(pos=self.position, length=5, width=5, height=5), box(pos=self.position + 10, length = 5, width = 5, height = 5)]
+        # self.shaape = box(pos=self.position, length=5, width=5, height=5)
+
         
 
 def ray_tracing_method(x,y,poly):
@@ -107,14 +125,25 @@ def ray_tracing_method(x,y,poly):
 
     return inside        
 
-#Declaring our one block        
+def mouseDownEventHandler():
+    if (scene.mouse.pos.x < 2):
+        print('d')
+    return 0
+
+
+#Declarations
 puck = Puck(1, vector(-10, 0, 0), vector(20, 20, 0), pow(10, -4), 5)
 forcer = ForceCreator(vector(0, 20, 0), pow(10, -4))
+goal = Goal(vector(20, 0, 0))
         
+forceCreatorsList = []
+
+scene.bind("mousedown", mouseDownEventHandler)
 while(True):
-    rate(runRate)
-    puck.update(forcer)
-    forcer.update()
+    if (gameMode == "Simulation"):
+        rate(runRate)
+        puck.update(forcer)
+        forcer.update()
     #when click and drag add a new point charge to a list, then run the loop through puck and update everyone
    
     
