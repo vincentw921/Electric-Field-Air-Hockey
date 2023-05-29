@@ -103,6 +103,15 @@ class Goal:
         if (puck.position.x + 5 > self.position.x - 10 and puck.position.x + 5 < self.position.x + 10 and puck.position.y + 5 < self.position.y + 40 and puck.position.y > self.position.y):
             print("GOALLLLL")
             
+class ChargeHolder():
+    def __init__(self, position, charge):
+        self.position = position
+        self.charge = charge
+        self.shape = box(pos=self.position, length = 20, width = 1, height = 20, color = color.cyan)
+    
+class StupidMouse():
+    def __init__(self):
+        self.picked = False
         
 
 def ray_tracing_method(x,y,poly):
@@ -130,24 +139,35 @@ def ray_tracing_method(x,y,poly):
 
     return inside        
 
-def mouseDownEventHandler():
-    if (scene.mouse.pos.x < 2):
-        print('d')
-    return 0
 
+def mouseDownEventHandler():
+    #if mouse is in the charge box and mousedown is pressed
+    if (scene.mouse.pos.x < positiveChargeHolder.position.x + 10 and scene.mouse.pos.x > positiveChargeHolder.position.x - 10 and scene.mouse.pos.y < positiveChargeHolder.position.y + 10 and scene.mouse.pos.y > positiveChargeHolder.position.y - 10):
+        mouse.picked = True
+        print("dong")
+def mouseUpEventHandler():
+    if (mouse.picked):
+        forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 1))
+        mouse.picked = False
 
 #Declarations
 puck = Puck(1, vector(-10, 0, 0), vector(20, 20, 0), pow(10, -4), 5)
 forcer = ForceCreator(vector(0, 20, 0), pow(10, -4))
 goal = Goal(vector(20, 0, 0))
-        
+positiveChargeHolder = ChargeHolder(vector(50, 50, 0), 1)
+mouse = StupidMouse()
+
 forceCreatorsList = []
 
 scene.bind("mousedown", mouseDownEventHandler)
+scene.bind("mouseup", mouseUpEventHandler)
+
 while(True):
     if (gameMode == "Simulation"):
         rate(runRate)
-        puck.update(forcer)
+        for object in forceCreatorsList:
+            puck.update(object)
+        
         forcer.update()
         goal.inGoal(forcer)
     #when click and drag add a new point charge to a list, then run the loop through puck and update everyone
