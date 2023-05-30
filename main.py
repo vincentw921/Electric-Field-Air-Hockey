@@ -14,7 +14,7 @@ boundaryTop3D = box(pos=vector(0, 100, 0), length=405, width=5, height=5)
 boundaryBottom3D = box(pos=vector(0, -100, 0), length=405, width=5, height=5)  
 
 # TODO: LIST:
-#   1. BOUNDARY MATH FOR GOAL IS NOT RIGHT!
+#   1. BOUNDARY MATH FOR PUCK and GOAL IS NOT RIGHT!
 
 class Puck:
     def __init__(self, mass, velocity, position, charge, radius):
@@ -78,7 +78,7 @@ class Charges:
     def __init__(self, position, charge):
         self.position = position
         self.charge = charge
-        self.shape = cylinder(pos=self.position, axis=vector(0,0,1), radius=5)
+        self.shape = cylinder(pos=self.position, axis=vector(0,0,1), radius=5, color=color.red)
     def createElectricField(self):
         return 0  
 
@@ -153,8 +153,8 @@ def mouseUpEventHandler():
 #Declarations
 puck = Puck(1, vector(-10, 0, 0), vector(20, 20, 0), pow(10, -4), 5)
 forcer = ForceCreator(vector(0, 20, 0), pow(10, -4))
-goal = Goal(vector(20, 0, 0))
-positiveChargeHolder = ChargeHolder(vector(50, 50, 0), 1)
+goal = Goal(vector(150, 0, 0))
+positiveChargeHolder = ChargeHolder(vector(100, 130, 0), 1)
 mouse = StupidMouse()
 
 forceCreatorsList = []
