@@ -108,7 +108,12 @@ class ChargeHolder():
         self.position = position
         self.charge = charge
         self.shape = box(pos=self.position, length = 20, width = 1, height = 20, color = color.cyan)
-    
+        # self.color
+        # if (charge > 0):
+        #     self.color = color.red
+        # else:
+        #     self.color = color.blue
+        # self.circles = [cylinder(pos=self.position - vector(5, 5, 0), axis=vector(0,0,1), radius=2, color=self.color), cylinder(pos=self.position+vector(5, 5, 0), axis=vector(0,0,1), radius=2, color=self.color)]
 class StupidMouse():
     def __init__(self):
         self.picked = False
@@ -155,6 +160,7 @@ puck = Puck(1, vector(-10, 0, 0), vector(20, 20, 0), pow(10, -4), 5)
 forcer = ForceCreator(vector(0, 20, 0), pow(10, -4))
 goal = Goal(vector(150, 0, 0))
 positiveChargeHolder = ChargeHolder(vector(100, 130, 0), 1)
+negativeChargeHolder = ChargeHolder(vector(120, 130, 0), -1)
 mouse = StupidMouse()
 
 forceCreatorsList = []
