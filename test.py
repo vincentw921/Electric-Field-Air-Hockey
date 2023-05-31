@@ -80,20 +80,11 @@ class Charges:
         self.charge = charge
         self.shape = cylinder(pos=self.position, axis=vector(0,0,1), radius=5, color=chargeColor)
         self.showField = showField
-        self.arrowList = []
     def calculateElectricField(self, point):
         distanceVector = self.position - point
         forceMag = (1 / (4 * pi* 8.85 * pow(10, -12))) * (self.charge / pow(mag(distanceVector), 2))
         forceVector = vector((forceMag * distanceVector.x) / mag(distanceVector), (forceMag * distanceVector.y) / mag(distanceVector), 0) 
         return forceVector
-    def createElectricField(self):
-        if (self.showField):
-            for x in range(-200, 200, 20):
-                for y in range(-200, 200, 20):
-                    forceVector = self.calculateElectricField(vector(x, y, 0))
-                    self.arrowList.append(arrow(pos=vector(x, y, 0), axis=forceVector, color=color.green, length = 15))
-        else:
-            self.arrowList = []
 
 class Obstacles:
     def __init__(self, position, charge):
@@ -186,6 +177,7 @@ negativeChargeHolder = ChargeHolder(vector(120, 130, 0), -1)
 mouse = StupidMouse()
 
 forceCreatorsList = []
+arrowList = []
 
 scene.bind("mousedown", mouseDownEventHandler)
 scene.bind("mouseup", mouseUpEventHandler)
@@ -194,9 +186,16 @@ while(True):
     if (gameMode == "Simulation"):
         rate(runRate)
         for object in forceCreatorsList:
-            object.createElectricField()
             puck.update(object)
-        
+        if (self.showField):
+            for x in range(-200, 200, 20):
+                for y in range(-200, 200, 20):
+                    forceVector = vector(0,0,0)
+                    for object in forceCreatorsList:
+                        forceVector = forceVector + object.calculateElectricField(vector(x, y, 0))
+                    arrowList.append(arrow(pos=vector(x, y, 0), axis=forceVector, color=color.green, length = 15))
+        else:
+            arrowList = []
         forcer.update()
         goal.inGoal(puck)
     #when click and drag add a new point charge to a list, then run the loop through puck and update everyone
