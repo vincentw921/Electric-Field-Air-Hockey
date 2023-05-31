@@ -58,16 +58,6 @@ class Puck:
         self.position = self.position + self.velocity
         self.shape.pos = self.position
 
-#FOR AIR HOCKEY STRETCH GOAL
-class ForceCreator:
-    def __init__(self, position, charge):
-        self.position = position
-        self.charge = charge
-        self.shape = cylinder(pos=self.position, axis=vector(0,0,1), radius=5)
-    def update(self):
-        self.position = scene.mouse.pos
-        self.shape.pos = self.position
-
 class Charges:
     def __init__(self, position, charge, chargeColor, showField):
         self.position = position
@@ -169,11 +159,24 @@ def mouseUpEventHandler():
         mouse.picked = False
     mouse.currCharge = "None"
     
+def ElectricFieldToggler(checkbox):
+    if (checkbox.checked):
+        for object in forceCreatorsList:
+            print("hehe")
+            object.createElectricField()
+        object.arrowList.visible = True
+    else:
+        print("oogle")
+        for object in forceCreatorsList:
+            for shape in object.arrowList:
+                shape.visible = False
+            
+
+checkbox(bind=ElectricFieldToggler, text="Show Electric Field")
 
 
 #Declarations
 puck = Puck(1, vector(0, 0, 0), vector(20, 0, 0), pow(10, -3), 5)
-forcer = ForceCreator(vector(0, 20, 0), pow(10, -3))
 goal = Goal(vector(150, 0, 0))
 positiveChargeHolder = ChargeHolder(vector(100, 130, 0), 1)
 negativeChargeHolder = ChargeHolder(vector(120, 130, 0), -1)
@@ -184,6 +187,7 @@ forceCreatorsList = []
 scene.bind("mousedown", mouseDownEventHandler)
 scene.bind("mouseup", mouseUpEventHandler)
 
+
 while(True):
     if (gameMode == "Simulation"):
         rate(runRate)
@@ -191,7 +195,5 @@ while(True):
 #            MOVE TO OUTSIDE WHILE STATEMENT
 #            object.createElectricField()
             puck.update(object)
-        print(puck.velocity)
-        forcer.update()
         goal.inGoal(puck)
     #when click and drag add a new point charge to a list, then run the loop through puck and update everyone
