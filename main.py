@@ -1,5 +1,5 @@
-#  Web VPython 3.2
-from vpython import *
+Web VPython 3.2
+#from vpython import *
 #Constants
 runRate = 100 #50 times a second
 elasticity = 1
@@ -33,34 +33,28 @@ class Puck:
         distanceVector = self.position - forceCreators.position
         forceMag = (1 / (4 * pi* 8.85 * pow(10, -12))) * ((self.charge * forceCreators.charge) / pow(mag(distanceVector), 2))
         forceVector = vector((forceMag * distanceVector.x) / mag(distanceVector), (forceMag * distanceVector.y) / mag(distanceVector), 0) 
-        self.netForce = self.netForce + forceVector
+        self.netForce = forceVector
             
     def update(self, forcer):
         self.calcNetForce(forcer)
-        addVelo = False
         if (self.position.x + self.radius + self.velocity.x > (boundaryRight3D.pos.x - 5)):
             self.position.x = boundaryRight3D.pos.x - 5 - self.radius
             self.velocity.x = - self.velocity.x
-            addVelo = True
         
 
         if (self.position.x + self.radius + self.velocity.x < (boundaryLeft3D.pos.x + 5)):
             self.position.x = boundaryLeft3D.pos.x + self.radius + 5
             self.velocity.x = - self.velocity.x
-            addVelo = True
 
         if (self.position.y + self.radius + self.velocity.y > (boundaryTop3D.pos.y - 5)):
             self.position.y = boundaryTop3D.pos.y - self.radius - 5
             self.velocity.y = - self.velocity.y
-            addVelo = True
 
         if (self.position.y + self.radius + self.velocity.y < (boundaryBottom3D.pos.y + 5)):
             self.position.y = boundaryBottom3D.pos.y + self.radius + 5
             self.velocity.y = - self.velocity.y
-            addVelo = True
         
-        if (addVelo == False):
-            self.velocity = self.velocity + (self.netForce / self.mass) * (1 / runRate)
+        self.velocity = self.velocity + (self.netForce / self.mass) * (1 / runRate)
         self.position = self.position + self.velocity
         self.shape.pos = self.position
 
@@ -168,18 +162,18 @@ def mouseDownEventHandler():
         mouse.currCharge = "Negative"
 def mouseUpEventHandler():
     if (mouse.picked and mouse.currCharge == "Positive"):
-        forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 1, color.red, True))
+        forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 1 * pow(10, -3), color.red, True))
         mouse.picked = False
     elif (mouse.picked and mouse.currCharge == "Negative"):
-        forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), -1, color.blue, True))
+        forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), -1 * pow(10, -3), color.blue, True))
         mouse.picked = False
     mouse.currCharge = "None"
     
 
 
 #Declarations
-puck = Puck(1, vector(-10, 0, 0), vector(20, 20, 0), pow(10, -5), 5)
-forcer = ForceCreator(vector(0, 20, 0), pow(10, -5))
+puck = Puck(1, vector(0, 0, 0), vector(20, 0, 0), pow(10, -3), 5)
+forcer = ForceCreator(vector(0, 20, 0), pow(10, -3))
 goal = Goal(vector(150, 0, 0))
 positiveChargeHolder = ChargeHolder(vector(100, 130, 0), 1)
 negativeChargeHolder = ChargeHolder(vector(120, 130, 0), -1)
@@ -194,9 +188,10 @@ while(True):
     if (gameMode == "Simulation"):
         rate(runRate)
         for object in forceCreatorsList:
-            object.createElectricField()
+#            MOVE TO OUTSIDE WHILE STATEMENT
+#            object.createElectricField()
             puck.update(object)
-        
+        print(puck.velocity)
         forcer.update()
         goal.inGoal(puck)
     #when click and drag add a new point charge to a list, then run the loop through puck and update everyone
