@@ -1,4 +1,4 @@
-  Web VPython 3.2
+Web VPython 3.2
 #from vpython import *
 #Constants
 runRate = 100 #50 times a second
@@ -16,6 +16,11 @@ boundaryBottom3D = box(pos=vector(0, -100, 0), length=405, width=5, height=5)
 # TODO: LIST:
 #   1. BOUNDARY MATH FOR PUCK and GOAL IS NOT RIGHT!
 
+class GameState:
+    def __init__(self):
+        showField = False
+        arrowList = []
+    
 class Puck:
     def __init__(self, mass, velocity, position, charge, radius):
         #mass is scalar, velocity is vector, position is vector
@@ -33,57 +38,51 @@ class Puck:
         distanceVector = self.position - forceCreators.position
         forceMag = (1 / (4 * pi* 8.85 * pow(10, -12))) * ((self.charge * forceCreators.charge) / pow(mag(distanceVector), 2))
         forceVector = vector((forceMag * distanceVector.x) / mag(distanceVector), (forceMag * distanceVector.y) / mag(distanceVector), 0) 
-        self.netForce = self.netForce + forceVector
+        self.netForce = forceVector
             
-    def update(self, forcer):
+    def update(self, forcer, obstacleList):
         self.calcNetForce(forcer)
-        addVelo = False
         if (self.position.x + self.radius + self.velocity.x > (boundaryRight3D.pos.x - 5)):
             self.position.x = boundaryRight3D.pos.x - 5 - self.radius
             self.velocity.x = - self.velocity.x
-            addVelo = True
         
 
         if (self.position.x + self.radius + self.velocity.x < (boundaryLeft3D.pos.x + 5)):
             self.position.x = boundaryLeft3D.pos.x + self.radius + 5
             self.velocity.x = - self.velocity.x
-            addVelo = True
 
         if (self.position.y + self.radius + self.velocity.y > (boundaryTop3D.pos.y - 5)):
             self.position.y = boundaryTop3D.pos.y - self.radius - 5
             self.velocity.y = - self.velocity.y
-            addVelo = True
 
         if (self.position.y + self.radius + self.velocity.y < (boundaryBottom3D.pos.y + 5)):
             self.position.y = boundaryBottom3D.pos.y + self.radius + 5
             self.velocity.y = - self.velocity.y
-            addVelo = True
         
-        if (addVelo == False):
-            self.velocity = self.velocity + (self.netForce / self.mass) * (1 / runRate)
+        self.velocity = self.velocity + (self.netForce / self.mass) * (1 / runRate)
         self.position = self.position + self.velocity
         self.shape.pos = self.position
 
-#FOR AIR HOCKEY STRETCH GOAL
-class ForceCreator:
-    def __init__(self, position, charge):
-        self.position = position
-        self.charge = charge
-        self.shape = cylinder(pos=self.position, axis=vector(0,0,1), radius=5)
-    def update(self):
-        self.position = scene.mouse.pos
-        self.shape.pos = self.position
-
 class Charges:
-    def __init__(self, position, charge, chargeColor):
+    def __init__(self, position, charge, chargeColor, showField):
         self.position = position
         self.charge = charge
         self.shape = cylinder(pos=self.position, axis=vector(0,0,1), radius=5, color=chargeColor)
+        self.showField = showField
+        self.arrowList = []
     def calculateElectricField(self, point):
-        distanceVector = self.position - point
+        distanceVector = point - self.position
         forceMag = (1 / (4 * pi* 8.85 * pow(10, -12))) * (self.charge / pow(mag(distanceVector), 2))
         forceVector = vector((forceMag * distanceVector.x) / mag(distanceVector), (forceMag * distanceVector.y) / mag(distanceVector), 0) 
         return forceVector
+    def createElectricField(self):
+        if (self.showField):
+            for x in range(-200, 200, 20):
+                for y in range(-200, 200, 20):
+                    forceVector = self.calculateElectricField(vector(x, y, 0))
+                    self.arrowList.append(arrow(pos=vector(x, y, 0), axis=forceVector, color=color.green, length = 15))
+        else:
+            self.arrowList = []
 
 class Obstacles:
     def __init__(self, position, charge):
@@ -158,41 +157,50 @@ def mouseDownEventHandler():
         mouse.currCharge = "Negative"
 def mouseUpEventHandler():
     if (mouse.picked and mouse.currCharge == "Positive"):
-        forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 1, color.red))
+        forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 1 * pow(10, -3), color.red, True))
         mouse.picked = False
     elif (mouse.picked and mouse.currCharge == "Negative"):
-        forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), -1, color.blue))
+        forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), -1 * pow(10, -3), color.blue, True))
         mouse.picked = False
     mouse.currCharge = "None"
+    
+def ElectricFieldToggler(checkbox):
+    if (checkbox.checked):
+        constants.showField = True
+    else:
+        constants.showField = False
+        constants.arrowList = []
 
 
 #Declarations
-puck = Puck(1, vector(-10, 0, 0), vector(20, 20, 0), pow(10, -5), 5)
-forcer = ForceCreator(vector(0, 20, 0), pow(10, -5))
+constants = GameState()
+puck = Puck(1, vector(0, 0, 0), vector(20, 0, 0), pow(10, -3), 5)
 goal = Goal(vector(150, 0, 0))
 positiveChargeHolder = ChargeHolder(vector(100, 130, 0), 1)
 negativeChargeHolder = ChargeHolder(vector(120, 130, 0), -1)
 mouse = StupidMouse()
 
 forceCreatorsList = []
-showField = True
+obstacleList = []
 
 scene.bind("mousedown", mouseDownEventHandler)
 scene.bind("mouseup", mouseUpEventHandler)
 
+checkbox(bind=ElectricFieldToggler, text="Show Electric Field")
+
 while(True):
     if (gameMode == "Simulation"):
         rate(runRate)
-        for object in forceCreatorsList:
-            puck.update(object)
-        arrowList = []
-        if (showField and len(forceCreatorsList) > 0):
+        
+        constants.arrowList = []
+        if (constants.showField and len(forceCreatorsList) > 0):
             for x in range(-200, 200, 20):
                 for y in range(-200, 200, 20):
                     forceVector = vector(0,0,0)
                     for object in forceCreatorsList:
                         forceVector = forceVector + object.calculateElectricField(vector(x, y, 0))
-                    arrowList.append(arrow(pos=vector(x, y, 0), axis=forceVector, color=color.green, length = 15))
-        forcer.update()
+                    constants.arrowList.append(arrow(pos=vector(x, y, 0), axis=forceVector, color=color.green, length = 15))
+        for object in forceCreatorsList:           
+            puck.update(object, obstacleList)
         goal.inGoal(puck)
     #when click and drag add a new point charge to a list, then run the loop through puck and update everyone
