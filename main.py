@@ -54,11 +54,40 @@ class Puck:
             self.position.y = boundaryBottom3D.pos.y + self.radius + 5
             self.velocity.y = - self.velocity.y
     def checkObstacles(self, obstacle):
-        if (self.position.x + self.radius + self.velocity.x > (obstacle.position.x - (obstacle.length / 2)) and
-            self.position.x + self.radius + self.velocity.x < (obstacle.position.x + (obstacle.length / 2)) and
-            self.position.y + self.radius + self.velocity.y > (obstacle.position.y - (obstacle.width / 2)) and 
-            self.position.y + self.radius + self.velocity.y < (obstacle.position.y + (obstacle.width / 2)) 
-            ):
+        if (self.touchingObstacleLeftBounds(obstacle) and self.position.y < obstacle.topBox.pos.y and self.position.y > obstacle.bottomBox.pos.y):
+            self.position.x = obstacle.leftBox.pos.x - 5
+            self.velocity.x = - self.velocity.x
+        if (self.touchingObstacleRightBounds(obstacle) and self.position.y < obstacle.topBox.pos.y and self.position.y > obstacle.bottomBox.pos.y):
+            self.position.x = obstacle.leftBox.pos.x + 5
+            self.velocity.x = - self.velocity.x
+        if (self.touchingObstacleBottomBounds(obstacle) and self.position.x < obstacle.rightBox.pos.x and self.position.x > obstacle.leftBox.pos.x):
+            self.position.y = obstacle.bottomBox.pos.y - 5
+            self.velocity.y = - self.velocity.y
+        if (self.touchingObstacleTopBounds(obstacle) and self.position.x < obstacle.rightBox.pos.x and self.position.x > obstacle.leftBox.pos.x):
+            self.position.y = obstacle.Top.pos.y + 5
+            self.velocity.y = - self.velocity.y
+    
+    def touchingObstacleLeftBounds(self, obstacle): 
+        if (abs(((self.position.x + self.radius + self.velocity.x) - (obstacle.leftBox.pos.x))) < 0.5):
+            return True
+        else:
+            return False
+        
+    def touchingObstacleRightBounds(self, obstacle):
+        return (abs(((self.position.x - self.radius + self.velocity.x) - (obstacle.rightBox.pos.x))) < 0.5)
+        
+    def touchingObstacleTopBounds(self, obstacle):
+        return (abs(((self.position.y - self.radius + self.velocity.y) - (obstacle.topBox.pos.y))) < 0.5)
+
+    def touchingObstacleBottomBounds(self, obstacle):
+        return (abs(((self.position.y + self.radius + self.velocity.y) - (obstacle.bottomBox.pos.y))) < 0.5)
+
+        # if (self.position.x + self.radius + self.velocity.x > (obstacle.position.x - (obstacle.length / 2)) and
+        #     self.position.x + self.radius + self.velocity.x < (obstacle.position.x + (obstacle.length / 2)) and
+        #     self.position.y + self.radius + self.velocity.y > (obstacle.position.y - (obstacle.width / 2)) and 
+        #     self.position.y + self.radius + self.velocity.y < (obstacle.position.y + (obstacle.width / 2)) 
+        #     ):
+            
 
         
 
@@ -134,7 +163,6 @@ class ElectricField:
                         forceVector = forceVector + object.calculateElectricField(vector(x, y, 0))
                     self.arrowList[pos].axis = forceVector
                     self.arrowList[pos].opacity = ElectricField.squash(mag(forceVector))
-                    print(ElectricField.squash(mag(forceVector))
                     self.arrowList[pos].length = 15
                     pos += 1
 
@@ -151,6 +179,12 @@ class BoxObstacle(Obstacles):
         self.length = length
         self.width = width
         self.shape = box(pos=self.position, length = self.length, width=5, height=self.width)
+        self.topBox = box(pos=self.position + vector(0, self.width/2 - 1, 0), length = self.length - 2, width = 5, height = 1, color=color.blue)
+        self.bottomBox = box(pos=(self.position - vector(0, self.width/2 - 1, 0)), length = self.length - 2, width = 5, height = 1, color=color.red)
+        self.leftBox = box(pos=(self.position - vector(self.length/2 - 1, 0, 0)), length = 1, width = 5, height = self.width - 2, color=color.green)
+        self.rightBox = box(pos=self.position + vector(self.length/2 - 1, 0, 0), length = 1, width = 5, height = self.width - 2, color=color.orange)
+
+    
     def getVertices(self):
         return self.shape.bounding_box()
     
@@ -178,57 +212,54 @@ class StupidMouse():
     def __init__(self):
         self.picked = False
         self.currCharge = None
-
-def ray_tracing_method(x,y,poly):
-    print(poly)
-    n = 8
-    inside = False
-    xints = None
-    p1x = poly[0].x
-    p1y = poly[0].y
-    
-    print("error here")
-
-    for i in range(n+1):
-        p2x = poly[i % n].x
-        p2y = poly[i % n].y
-        if (y > min(p1y,p2y)):
-            if (y <= max(p1y,p2y)):
-                if (x <= max(p1x,p2x)):
-                    if (p1y != p2y):
-                        xints = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
-                    if (p1x == p2x or x <= xints):
-                        inside = not inside
-        p1x = p2x
-        p1y = p2y
-
-    return inside        
-
+        #Simulation, HomeScreen
+        self.gameMode = "Homescreen"
+class StartMenu():
+    def __init__(self):
+        self.currPick = "NONE"
+        self.bg = box(texture='https://i.imgur.com/C8lDKFW.jpeg', pos=vector(0,0,0), length=500, height=300, width = 5)
+        self.play = box(texture='https://i.imgur.com/JdkcbAr.jpeg', pos=vector(0, -50, 0), length = 100, height=50, width=5)
+    def update(self):
+        if (self.currPick == "PLAY"):
+            self.play.opacity = 1
+        
 
 def mouseDownEventHandler():
     #if mouse is in the charge box and mousedown is pressed
-    if (scene.mouse.pos.x < positiveChargeHolder.position.x + 10 and scene.mouse.pos.x > positiveChargeHolder.position.x - 10 and scene.mouse.pos.y < positiveChargeHolder.position.y + 10 and scene.mouse.pos.y > positiveChargeHolder.position.y - 10):
-        mouse.picked = True
-        mouse.currCharge = "Positive"
-    if (scene.mouse.pos.x < negativeChargeHolder.position.x + 10 and scene.mouse.pos.x > negativeChargeHolder.position.x - 10 and scene.mouse.pos.y < negativeChargeHolder.position.y + 10 and scene.mouse.pos.y > negativeChargeHolder.position.y - 10):
-        mouse.picked = True
-        mouse.currCharge = "Negative"
+    if (mouse.gameMode == "Simulation"):
+        if (scene.mouse.pos.x < positiveChargeHolder.position.x + 10 and scene.mouse.pos.x > positiveChargeHolder.position.x - 10 and scene.mouse.pos.y < positiveChargeHolder.position.y + 10 and scene.mouse.pos.y > positiveChargeHolder.position.y - 10):
+            mouse.picked = True
+            mouse.currCharge = "Positive"
+        if (scene.mouse.pos.x < negativeChargeHolder.position.x + 10 and scene.mouse.pos.x > negativeChargeHolder.position.x - 10 and scene.mouse.pos.y < negativeChargeHolder.position.y + 10 and scene.mouse.pos.y > negativeChargeHolder.position.y - 10):
+            mouse.picked = True
+            mouse.currCharge = "Negative"
+        
 def mouseUpEventHandler():
-    if (mouse.picked and mouse.currCharge == "Positive"):
-        forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 1 * pow(10, -3), color.red, True))
-        electricField.updateElectricField()
-        mouse.picked = False
-    elif (mouse.picked and mouse.currCharge == "Negative"):
-        forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), -1 * pow(10, -3), color.blue, True))
-        electricField.updateElectricField()
-        mouse.picked = False
-    mouse.currCharge = "None"
-    
+    if (mouse.gameMode == "Simulation"):
+        if (mouse.picked and mouse.currCharge == "Positive"):
+            forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 1 * pow(10, -3), color.red, True))
+            electricField.updateElectricField()
+            mouse.picked = False
+        elif (mouse.picked and mouse.currCharge == "Negative"):
+            forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), -1 * pow(10, -3), color.blue, True))
+            electricField.updateElectricField()
+            mouse.picked = False
+        mouse.currCharge = "None"
+
+def mouseClickHandler():
+    if (mouse.gameMode == "Homescreen"):
+        if (scene.mouse.pos.x < start.play.pos.x + 50 and scene.mouse.pos.x > start.play.pos.x - 50 and scene.mouse.pos.y < start.play.pos.y + 25 and scene.mouse.pos.y > start.play.pos.y - 25):
+            mouse.gameMode = "Simulation"
+            start.bg.visible = False
+            start.play.visible = False
+
 def ElectricFieldToggler(checkbox):
     if (checkbox.checked and len(forceCreatorsList) > 0):
         electricField.enableElectricField()
     else:
         electricField.disableElectricField()
+
+#Homescreen
 
 
 #Declarations
@@ -237,20 +268,23 @@ goal = Goal(vector(150, 0, 0))
 positiveChargeHolder = ChargeHolder(vector(100, 130, 0), 1)
 negativeChargeHolder = ChargeHolder(vector(120, 130, 0), -1)
 mouse = StupidMouse()
+start = StartMenu()
 
 forceCreatorsList = []
 obstacleList = []
-obstacleList.append(BoxObstacle(vector(100, 0, 0), 0, 20, 10))
+obstacleList.append(BoxObstacle(vector(100, 0, 0), 0, 20, 200))
 electricField = ElectricField(forceCreatorsList)
 
 scene.bind("mousedown", mouseDownEventHandler)
 scene.bind("mouseup", mouseUpEventHandler)
+scene.bind("click", mouseClickHandler)
 
 checkbox(bind=ElectricFieldToggler, text="Show Electric Field")
 
 while(True):
-    if (gameMode == "Simulation"):
-        rate(runRate)
+    rate(runRate)
+
+    if (mouse.gameMode == "Simulation"):
             
         for object in forceCreatorsList:           
             puck.update(object, obstacleList)
