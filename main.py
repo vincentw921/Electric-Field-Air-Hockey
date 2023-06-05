@@ -4,6 +4,7 @@
 runRate = 100 #50 times a second
 elasticity = 1
 gameMode = "Simulation"
+level = "LEVEL1"
 #Background
 scene.background = vector(0,0,0) #RGB but out of 1
 scene.userzoom = False
@@ -269,34 +270,37 @@ def ElectricFieldToggler(checkbox):
         electricField.disableElectricField()
         
 class Level():
-    def __init__(self, obtacles, goalStartLocation, puckStartLocation):
+    def __init__(self, name, obtacles, goalStartLocation, puckStartLocation):
+        self.name = name
         self.obstacles = obstacles
-        self.goalStartLocation = goalStartLocation
-        self.PuckStartLocation = puckStartLocation
+        
+        self.puck = Puck(1, vector(0, 0, 0), puckStartLocation, pow(10, -3), 5)
+        self.goal = Goal(goalStartLocation)
         
     def startLevel(self):
-        if (gameMode == "LEVEL1"):
+        if (level == name):
             for obstacle in self.obstacles:
                 obstacle.visible = True
-        
-class Level1(Level):
-    
-        
+            self.puck.visible = True
+            self.goal.visible = True
+        else:
+            for obstacle in self.obstacles:
+                obstacle.visible = False
+            self.puck.visible = False
+            self.goal.visible = False
 
-#Homescreen
-
+# Levels
+levels = [Level(), Level()]
 
 #Declarations
-puck = Puck(1, vector(0, 0, 0), vector(20, 0, 0), pow(10, -3), 5)
-goal = Goal(vector(150, 0, 0))
 positiveChargeHolder = ChargeHolder(vector(100, 130, 0), 1)
 negativeChargeHolder = ChargeHolder(vector(120, 130, 0), -1)
 mouse = StupidMouse()
 start = StartMenu()
+
 goalAnimation = GoalAnimation()
 
 forceCreatorsList = []
-obstacleList = []
 #obstacleList.append(BoxObstacle(vector(100, 0, 0), 0, 20, 200))
 electricField = ElectricField(forceCreatorsList)
 
@@ -310,6 +314,8 @@ while(True):
     rate(runRate)
 
     if (mouse.gameMode == "Simulation"):
+        for level in levels:
+            level.startLevel()
         for object in forceCreatorsList:           
             puck.update(object, obstacleList)
         if (goal.inGoal(puck)):
