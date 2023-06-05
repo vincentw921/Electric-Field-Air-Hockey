@@ -267,6 +267,21 @@ def ElectricFieldToggler(checkbox):
         electricField.enableElectricField()
     else:
         electricField.disableElectricField()
+        
+class Level():
+    def __init__(self, obtacles, goalStartLocation, puckStartLocation):
+        self.obstacles = obstacles
+        self.goalStartLocation = goalStartLocation
+        self.PuckStartLocation = puckStartLocation
+        
+    def startLevel(self):
+        if (gameMode == "LEVEL1"):
+            for obstacle in self.obstacles:
+                obstacle.visible = True
+        
+class Level1(Level):
+    
+        
 
 #Homescreen
 
