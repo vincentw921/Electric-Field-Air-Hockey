@@ -1,5 +1,5 @@
-Web VPython 3.2
-# from vpython import *
+ Web VPython 3.2
+#from vpython import *
 #Constants
 runRate = 100 #50 times a second
 elasticity = 1
@@ -96,7 +96,7 @@ class Puck:
         self.checkBoundary()
         for o in obstacleList:
             self.checkObstacles(o)
-        print(self.velocity)
+        # print(self.velocity)
         self.velocity = self.velocity + (self.netForce / self.mass) * (1 / runRate)
         self.position = self.position + self.velocity
         self.shape.pos = self.position
@@ -107,20 +107,11 @@ class Charges:
         self.charge = charge
         self.shape = cylinder(pos=self.position, axis=vector(0,0,1), radius=5, color=chargeColor)
         self.showField = showField
-        self.arrowList = []
     def calculateElectricField(self, point):
         distanceVector = point - self.position
         forceMag = (1 / (4 * pi* 8.85 * pow(10, -12))) * (self.charge / pow(mag(distanceVector), 2))
         forceVector = vector((forceMag * distanceVector.x) / mag(distanceVector), (forceMag * distanceVector.y) / mag(distanceVector), 0) 
         return forceVector
-    def createElectricField(self):
-        if (self.showField):
-            for x in range(-200, 200, 20):
-                for y in range(-200, 200, 20):
-                    forceVector = self.calculateElectricField(vector(x, y, 0))
-                    self.arrowList.append(arrow(pos=vector(x, y, 0), axis=forceVector, color=color.green, length = 15))
-        else:
-            self.arrowList = []
             
 class ElectricField:
     def __init__(self, forceCreators):
@@ -130,7 +121,7 @@ class ElectricField:
                 
     def createElectricField(self):
         for x in range(-200, 200, 20):
-            for y in range(-200, 200, 20):
+            for y in range(-100, 100, 20):
                 ar = arrow(pos=vector(x, y, 0), axis=vector(0,0,0), color=color.green, length = 15, opacity = 1)
                 ar.visible = False
                 self.arrowList.append(ar)
@@ -138,7 +129,7 @@ class ElectricField:
     def squash(x):
         greatestMag = 0
         for x in range(-200, 200, 20):
-                for y in range(-200, 200, 20):
+                for y in range(-100, 100, 20):
                     forceVector = vector(0,0,0)
                     for object in self.forceCreators:
                         forceVector = forceVector + object.calculateElectricField(vector(x, y, 0))
@@ -157,7 +148,7 @@ class ElectricField:
     def updateElectricField(self):
         pos = 0
         for x in range(-200, 200, 20):
-                for y in range(-200, 200, 20):
+                for y in range(-100, 100, 20):
                     forceVector = vector(0,0,0)
                     for object in self.forceCreators:
                         forceVector = forceVector + object.calculateElectricField(vector(x, y, 0))
@@ -193,9 +184,7 @@ class Goal:
         self.position = position
         self.shape = [box(pos=self.position, length=20, width=1, height=5), box(pos=self.position + vector(10, 20, 0), length = 5, width = 1, height = 44), box(pos=self.position + vector(0, 40, 0), length = 20, width = 1, height = 5)]
     def inGoal(self, puck):
-        
-        if (puck.position.x + 5 > self.position.x - 10 and puck.position.x + 5 < self.position.x + 10 and puck.position.y + 5 < self.position.y + 40 and puck.position.y > self.position.y):
-            print("GOALLLLL")
+        return puck.position.x + 5 > self.position.x - 10 and puck.position.x + 5 < self.position.x + 10 and puck.position.y + 5 < self.position.y + 40 and puck.position.y > self.position.y
             
 class ChargeHolder():
     def __init__(self, position, charge):
@@ -222,6 +211,26 @@ class StartMenu():
     def update(self):
         if (self.currPick == "PLAY"):
             self.play.opacity = 1
+            
+class GoalAnimation():
+    def _init_(self):
+        self.timer = 0
+        self.bg = box(texture= 'https://img.bleacherreport.net/img/images/photos/002/171/742/ScreenShot2013-02-22at12.27.03AM_crop_exact.png?w=650&h=433&q=75', pos=vector(0,0,0), length=500, height=300, width = 5)
+        self.goal = text(text="GOAL!", pos=vector(0,0,0), height=10, color=color.black, pos = vector(0, -50, 0), align='center', depth=0.3, billboard=True, emissive=True)
+        self.goal.height = 50
+        self.goal.length = 100
+        
+    def update(self):
+        if (gameMode == "GOAL"):
+            print("GOALLLLLLL")
+            self.timer += 1
+            if (self.timer > 1000):
+                self.goal.visible = False
+                self.bg.visible = False
+                gameMode = "Simulation"
+        else:
+            self.timer = 0
+        
         
 
 def mouseDownEventHandler():
@@ -254,7 +263,7 @@ def mouseClickHandler():
             start.play.visible = False
 
 def ElectricFieldToggler(checkbox):
-    if (checkbox.checked and len(forceCreatorsList) > 0):
+    if (checkbox.checked and len(forceCreatorsList) > 0 and gameMode == "Simulation"):
         electricField.enableElectricField()
     else:
         electricField.disableElectricField()
@@ -269,10 +278,11 @@ positiveChargeHolder = ChargeHolder(vector(100, 130, 0), 1)
 negativeChargeHolder = ChargeHolder(vector(120, 130, 0), -1)
 mouse = StupidMouse()
 start = StartMenu()
+goalAnimation = GoalAnimation()
 
 forceCreatorsList = []
 obstacleList = []
-obstacleList.append(BoxObstacle(vector(100, 0, 0), 0, 20, 200))
+#obstacleList.append(BoxObstacle(vector(100, 0, 0), 0, 20, 200))
 electricField = ElectricField(forceCreatorsList)
 
 scene.bind("mousedown", mouseDownEventHandler)
@@ -285,8 +295,10 @@ while(True):
     rate(runRate)
 
     if (mouse.gameMode == "Simulation"):
-            
         for object in forceCreatorsList:           
             puck.update(object, obstacleList)
-        goal.inGoal(puck)
+        if (goal.inGoal(puck)):
+            gameMode = "GOAL"
+            
+    goalAnimation.update()
     #when click and drag add a new point charge to a list, then run the loop through puck and update everyone
