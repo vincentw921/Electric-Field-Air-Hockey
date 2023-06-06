@@ -216,7 +216,7 @@ class GoalAnimation():
     def __init__(self):
         self.timer = 0
         self.bg = box(texture='https://imgur.com/gallery/Bd5PdYU', pos=vector(0, -50, 0), length = 100, height=50, width=5)
-        self.goal = box(texture='https://imgur.com/gallery/TyZjRm2', pos=vector(0, -50, 0), length = 100, height=50, width=5)
+        self.goal = box(texture='https://imgur.com/gallery/TyZjRm2', pos=vector(-50, -50, 0), length = 100, height=50, width=5)
         self.bg.visible = False
         self.goal.height = 50
         self.goal.length = 100
