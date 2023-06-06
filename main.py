@@ -1,10 +1,9 @@
- Web VPython 3.2
-#from vpython import *
+Web VPython 3.2
+# from vpython import *
 #Constants
 runRate = 100 #50 times a second
 elasticity = 1
-gameMode = "Simulation"
-level = "LEVEL1"
+level = 0
 #Background
 scene.background = vector(0,0,0) #RGB but out of 1
 scene.userzoom = False
@@ -127,7 +126,7 @@ class ElectricField:
                 ar.visible = False
                 self.arrowList.append(ar)
                 
-    def squash(x):
+    def squash(self, x):
         greatestMag = 0
         for x in range(-200, 200, 20):
                 for y in range(-100, 100, 20):
@@ -154,7 +153,7 @@ class ElectricField:
                     for object in self.forceCreators:
                         forceVector = forceVector + object.calculateElectricField(vector(x, y, 0))
                     self.arrowList[pos].axis = forceVector
-                    self.arrowList[pos].opacity = ElectricField.squash(mag(forceVector))
+                    self.arrowList[pos].opacity = self.squash(mag(forceVector))
                     self.arrowList[pos].length = 15
                     pos += 1
 
@@ -214,25 +213,26 @@ class StartMenu():
             self.play.opacity = 1
             
 class GoalAnimation():
-    def _init_(self):
+    def __init__(self):
         self.timer = 0
-        self.bg = box(texture= 'https://img.bleacherreport.net/img/images/photos/002/171/742/ScreenShot2013-02-22at12.27.03AM_crop_exact.png?w=650&h=433&q=75', pos=vector(0,0,0), length=500, height=300, width = 5)
-        self.goal = text(text="GOAL!", pos=vector(0,0,0), height=10, color=color.black, pos = vector(0, -50, 0), align='center', depth=0.3, billboard=True, emissive=True)
+        self.bg = box(texture='https://imgur.com/gallery/Bd5PdYU', pos=vector(0, -50, 0), length = 100, height=50, width=5)
+        self.goal = box(texture='https://imgur.com/gallery/TyZjRm2', pos=vector(0, -50, 0), length = 100, height=50, width=5)
+        self.bg.visible = False
         self.goal.height = 50
         self.goal.length = 100
         
     def update(self):
-        if (gameMode == "GOAL"):
-            print("GOALLLLLLL")
-            self.timer += 1
+        if (mouse.gameMode == "GOAL"):
+            self.timer = self.timer + 1
+            self.bg.visible = True
+            self.goal.visible = True
             if (self.timer > 1000):
+                print("timer done")
                 self.goal.visible = False
                 self.bg.visible = False
-                gameMode = "Simulation"
+                mouse.gameMode = "Simulation"
         else:
             self.timer = 0
-        
-        
 
 def mouseDownEventHandler():
     #if mouse is in the charge box and mousedown is pressed
@@ -247,11 +247,11 @@ def mouseDownEventHandler():
 def mouseUpEventHandler():
     if (mouse.gameMode == "Simulation"):
         if (mouse.picked and mouse.currCharge == "Positive"):
-            forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 1 * pow(10, -3), color.red, True))
+            levels[level].forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 1 * pow(10, -3), color.red, True))
             electricField.updateElectricField()
             mouse.picked = False
         elif (mouse.picked and mouse.currCharge == "Negative"):
-            forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), -1 * pow(10, -3), color.blue, True))
+            levels[level].forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), -1 * pow(10, -3), color.blue, True))
             electricField.updateElectricField()
             mouse.picked = False
         mouse.currCharge = "None"
@@ -264,33 +264,39 @@ def mouseClickHandler():
             start.play.visible = False
 
 def ElectricFieldToggler(checkbox):
-    if (checkbox.checked and len(forceCreatorsList) > 0 and gameMode == "Simulation"):
+    if (checkbox.checked and len(levels[level].forceCreatorsList) > 0 and mouse.gameMode == "Simulation"):
         electricField.enableElectricField()
     else:
         electricField.disableElectricField()
         
 class Level():
-    def __init__(self, name, obtacles, goalStartLocation, puckStartLocation):
+    def __init__(self, name, obst, goalStartLocation, puckStartLocation, forceCreators):
         self.name = name
-        self.obstacles = obstacles
-        
+        self.obstacles = obst
+        self.forceCreatorsList = forceCreators
         self.puck = Puck(1, vector(0, 0, 0), puckStartLocation, pow(10, -3), 5)
         self.goal = Goal(goalStartLocation)
         
     def startLevel(self):
-        if (level == name):
+        if (level == int(self.name)):
             for obstacle in self.obstacles:
-                obstacle.visible = True
-            self.puck.visible = True
-            self.goal.visible = True
+                obstacle.shape.visible = True
+            self.puck.shape.visible = True
+            self.goal.shape.visible = True
         else:
             for obstacle in self.obstacles:
-                obstacle.visible = False
-            self.puck.visible = False
-            self.goal.visible = False
+                obstacle.shape.visible = False
+            self.puck.shape.visible = False
+            self.goal.shape.visible = False
 
 # Levels
-levels = [Level(), Level()]
+levels = []
+forceCreator0 = []
+obstacle0 = []
+levels.append(Level("0", obstacle0, vector(0, 0, 0), vector(-50, 0, 0), forceCreator0) )
+forceCreator1 = [Charges(vector(0,0,0), -1, color.blue, False)]
+obstacle1 = [BoxObstacle(vector(80, 0, 0), 0, 50, 20)]
+levels.append(Level("1", obstacle1, vector(0, 0, 0), vector(0, 0, 0), forceCreator1) )
 
 #Declarations
 positiveChargeHolder = ChargeHolder(vector(100, 130, 0), 1)
@@ -300,9 +306,7 @@ start = StartMenu()
 
 goalAnimation = GoalAnimation()
 
-forceCreatorsList = []
-#obstacleList.append(BoxObstacle(vector(100, 0, 0), 0, 20, 200))
-electricField = ElectricField(forceCreatorsList)
+electricField = ElectricField(levels[level].forceCreatorsList)
 
 scene.bind("mousedown", mouseDownEventHandler)
 scene.bind("mouseup", mouseUpEventHandler)
@@ -312,14 +316,21 @@ checkbox(bind=ElectricFieldToggler, text="Show Electric Field")
 
 while(True):
     rate(runRate)
-
     if (mouse.gameMode == "Simulation"):
-        for level in levels:
-            level.startLevel()
-        for object in forceCreatorsList:           
-            puck.update(object, obstacleList)
-        if (goal.inGoal(puck)):
-            gameMode = "GOAL"
+        for lev in levels:
+            lev.startLevel()
+        for object in levels[level].forceCreatorsList:           
+            levels[level].puck.update(object, levels[level].obstacles)
+        if (levels[level].goal.inGoal(levels[level].puck)):
+            mouse.gameMode = "GOAL"
+            level = level + 1
+            electricField = ElectricField(levels[level].forceCreatorsList)
+            if (level > len(levels)):
+                level = 0
+                mouse.gameMode = "Homescreen"
+            levels[level].puck.visible = False
             
-    goalAnimation.update()
+    if (mouse.gameMode == "GOAL"):
+            goalAnimation.update()
+
     #when click and drag add a new point charge to a list, then run the loop through puck and update everyone
