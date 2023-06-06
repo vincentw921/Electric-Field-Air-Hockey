@@ -123,7 +123,7 @@ class ElectricField:
         for x in range(-200, 200, 20):
             for y in range(-100, 100, 20):
                 ar = arrow(pos=vector(x, y, 0), axis=vector(0,0,0), color=color.green, length = 15, opacity = 1)
-                ar.visible = False
+                # ar.visible = False
                 self.arrowList.append(ar)
                 
     def squash(self, x):
@@ -138,6 +138,7 @@ class ElectricField:
         return x / greatestMag
                 
     def enableElectricField(self):
+        print("ACKLAJL:DF")
         for arrow in self.arrowList:
             arrow.visible = True
             
@@ -145,7 +146,8 @@ class ElectricField:
         for arrow in self.arrowList:
             arrow.visible = False
         
-    def updateElectricField(self):
+    def updateElectricField(self, forceCreatorsList):
+        self.forceCreators = forceCreatorsList
         pos = 0
         for x in range(-200, 200, 20):
                 for y in range(-100, 100, 20):
@@ -215,20 +217,16 @@ class StartMenu():
 class GoalAnimation():
     def __init__(self):
         self.timer = 0
-        self.bg = box(texture='https://imgur.com/gallery/Bd5PdYU', pos=vector(0, -50, 0), length = 100, height=50, width=5)
-        self.goal = box(texture='https://imgur.com/gallery/TyZjRm2', pos=vector(-50, -50, 0), length = 100, height=50, width=5)
+        self.bg = box(texture='https://i.imgur.com/hPqjcEJ.png', pos=vector(0, 0, 0), length = 500, height=300, width=5)
         self.bg.visible = False
-        self.goal.height = 50
-        self.goal.length = 100
+        # self.goal.visible = False
         
     def update(self):
         if (mouse.gameMode == "GOAL"):
             self.timer = self.timer + 1
             self.bg.visible = True
-            self.goal.visible = True
             if (self.timer > 1000):
                 print("timer done")
-                self.goal.visible = False
                 self.bg.visible = False
                 mouse.gameMode = "Simulation"
         else:
@@ -248,11 +246,11 @@ def mouseUpEventHandler():
     if (mouse.gameMode == "Simulation"):
         if (mouse.picked and mouse.currCharge == "Positive"):
             levels[level].forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 1 * pow(10, -3), color.red, True))
-            electricField.updateElectricField()
+            levels[level].electricField.updateElectricField(levels[level].forceCreatorsList)
             mouse.picked = False
         elif (mouse.picked and mouse.currCharge == "Negative"):
             levels[level].forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), -1 * pow(10, -3), color.blue, True))
-            electricField.updateElectricField()
+            levels[level].electricField.updateElectricField(levels[level].forceCreatorsList)
             mouse.picked = False
         mouse.currCharge = "None"
 
@@ -265,9 +263,10 @@ def mouseClickHandler():
 
 def ElectricFieldToggler(checkbox):
     if (checkbox.checked and len(levels[level].forceCreatorsList) > 0 and mouse.gameMode == "Simulation"):
-        electricField.enableElectricField()
+        print("activated")
+        levels[level].electricField.enableElectricField()
     else:
-        electricField.disableElectricField()
+        levels[level].electricField.disableElectricField()
         
 class Level():
     def __init__(self, name, obst, goalStartLocation, puckStartLocation, forceCreators):
@@ -276,6 +275,8 @@ class Level():
         self.forceCreatorsList = forceCreators
         self.puck = Puck(1, vector(0, 0, 0), puckStartLocation, pow(10, -3), 5)
         self.goal = Goal(goalStartLocation)
+        self.electricField = ElectricField(self.forceCreatorsList)
+
         
     def startLevel(self):
         if (level == int(self.name)):
@@ -291,7 +292,7 @@ class Level():
 
 # Levels
 levels = []
-forceCreator0 = []
+forceCreator0 = [Charges(vector(-200,0,0), -1, color.blue, False)]
 obstacle0 = []
 levels.append(Level("0", obstacle0, vector(0, 0, 0), vector(-50, 0, 0), forceCreator0) )
 forceCreator1 = [Charges(vector(0,0,0), -1, color.blue, False)]
@@ -305,8 +306,6 @@ mouse = StupidMouse()
 start = StartMenu()
 
 goalAnimation = GoalAnimation()
-
-electricField = ElectricField(levels[level].forceCreatorsList)
 
 scene.bind("mousedown", mouseDownEventHandler)
 scene.bind("mouseup", mouseUpEventHandler)
