@@ -46,6 +46,8 @@ class Puck:
     def calcNetForce(self, forceCreators):
         distanceVector = self.position - forceCreators.position
         forceMag = (1 / (4 * pi* 8.85 * pow(10, -12))) * ((self.charge * forceCreators.charge) / pow(mag(distanceVector), 2))
+        if (forceMag > (1 / (4 * pi* 8.85 * pow(10, -12))) * ((self.charge * forceCreators.charge) / pow(mag(distanceVector), 2))):
+            forceMag = (1 / (4 * pi* 8.85 * pow(10, -12))) * ((self.charge * forceCreators.charge) / pow(mag(distanceVector), 2))
         forceVector = vector((forceMag * distanceVector.x) / mag(distanceVector), (forceMag * distanceVector.y) / mag(distanceVector), 0) 
         self.netForce = forceVector
         
@@ -81,7 +83,7 @@ class Puck:
             self.position.y = obstacle.bottomBox.pos.y - self.radius
             self.velocity.y = - self.velocity.y
         if (self.touchingObstacleTopBounds(obstacle) and self.position.x < obstacle.rightBox.pos.x and self.position.x > obstacle.leftBox.pos.x):
-            self.position.y = obstacle.Top.pos.y + self.radius
+            self.position.y = obstacle.topBox.pos.y + self.radius
             self.velocity.y = - self.velocity.y
             
     # Make sure the puck doesn't go through the charges
@@ -92,23 +94,23 @@ class Puck:
             
     # Check if puck is touching obstacle left
     def touchingObstacleLeftBounds(self, obstacle): 
-        if (abs(((self.position.x + self.radius + self.velocity.x) - (obstacle.leftBox.pos.x))) < 0.5):
+        if (abs(((self.position.x + self.radius + self.velocity.x) - (obstacle.leftBox.pos.x))) < 1):
             return True
         else:
             return False
         
     # Check if puck is touching obstacle right
     def touchingObstacleRightBounds(self, obstacle):
-        return (abs(((self.position.x - self.radius + self.velocity.x) - (obstacle.rightBox.pos.x))) < 0.5)
+        return (abs(((self.position.x - self.radius + self.velocity.x) - (obstacle.rightBox.pos.x))) < 1)
         
         
     # Check if puck is touching obstacle top
     def touchingObstacleTopBounds(self, obstacle):
-        return (abs(((self.position.y - self.radius + self.velocity.y) - (obstacle.topBox.pos.y))) < 0.5)
+        return (abs(((self.position.y - self.radius + self.velocity.y) - (obstacle.topBox.pos.y))) < 1)
 
     # Check if puck is touching obstacle bottom
     def touchingObstacleBottomBounds(self, obstacle):
-        return (abs(((self.position.y + self.radius + self.velocity.y) - (obstacle.bottomBox.pos.y))) < 0.5)
+        return (abs(((self.position.y + self.radius + self.velocity.y) - (obstacle.bottomBox.pos.y))) < 1)
 
     # Update the position of the puck
     def update(self, forcer, obstacleList, chargeList):
@@ -198,10 +200,10 @@ class BoxObstacle(Obstacles):
         self.length = length
         self.width = width
         self.shape = box(pos=self.position, length = self.length, width=5, height=self.width)
-        self.topBox = box(pos=self.position + vector(0, self.width/2 - 1, 0), length = self.length - 2, width = 5, height = 1, color=color.blue)
-        self.bottomBox = box(pos=(self.position - vector(0, self.width/2 - 1, 0)), length = self.length - 2, width = 5, height = 1, color=color.red)
-        self.leftBox = box(pos=(self.position - vector(self.length/2 - 1, 0, 0)), length = 1, width = 5, height = self.width - 2, color=color.green)
-        self.rightBox = box(pos=self.position + vector(self.length/2 - 1, 0, 0), length = 1, width = 5, height = self.width - 2, color=color.orange)
+        self.topBox = box(pos=self.position + vector(0, self.width/2 - 1, 0), length = self.length, width = 5, height = 1, color=color.blue)
+        self.bottomBox = box(pos=(self.position - vector(0, self.width/2 - 1, 0)), length = self.length, width = 5, height = 1, color=color.red)
+        self.leftBox = box(pos=(self.position - vector(self.length/2 - 1, 0, 0)), length = 1, width = 5, height = self.width, color=color.green)
+        self.rightBox = box(pos=self.position + vector(self.length/2 - 1, 0, 0), length = 1, width = 5, height = self.width, color=color.orange)
 
     # get the bounds of the box
     def getVertices(self):
@@ -352,10 +354,10 @@ class Level():
 def addLevels():
     forceCreator0 = []
     obstacle0 = []
-    levels.append(Level("0", obstacle0, vector(0, 0, 0), vector(-50, 0, 0), forceCreator0) )
+    levels.append(Level("0", obstacle0, vector(100, 0, 0), vector(-50, 0, 0), forceCreator0) )
     forceCreator1 = []
-    obstacle1 = [BoxObstacle(vector(80, 0, 0), 0, 50, 20)]
-    levels.append(Level("1", obstacle1, vector(0,0,0), vector(-75, 0, 0), forceCreator1) )
+    obstacle1 = [BoxObstacle(vector(30, 0, 0), 0, 50, 20)]
+    levels.append(Level("1", obstacle1, vector(100,0,0), vector(-75, 0, 0), forceCreator1) )
 
 
 def changePuckSize(slider):
