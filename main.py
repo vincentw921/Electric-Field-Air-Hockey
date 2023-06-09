@@ -9,22 +9,29 @@ level = 0 #Current Level
 scene.background = vector(0,0,0) #RGB but out of 1
 scene.userzoom = False # No zooming or spinning :(
 scene.userspin = False
+scene.background = color.white
+
+scene.autoscale = False
+scene.range = 150
 
 # Arena Boundaries
-boundaryLeft3D = box(pos=vector(-200, 0, 0), length=5, width=5, height=200) 
-boundaryRight3D = box(pos=vector(200, 0, 0), length=5, width=5, height=200)  
-boundaryTop3D = box(pos=vector(0, 100, 0), length=405, width=5, height=5)  
-boundaryBottom3D = box(pos=vector(0, -100, 0), length=405, width=5, height=5)  
+boundaryLeft3D = box(pos=vector(-200, 0, 0), length=5, width=5, height=200, color=vector(54.5, 0, 0)) 
+boundaryRight3D = box(pos=vector(200, 0, 0), length=5, width=5, height=200, color=vector(54.5, 0, 0))  
+boundaryTop3D = box(pos=vector(0, 100, 0), length=405, width=5, height=5, color=vector(54.5, 0, 0))  
+boundaryBottom3D = box(pos=vector(0, -100, 0), length=405, width=5, height=5, color=vector(54.5, 0, 0))  
 
 # TODO: LIST:
 # 1. Add a different background, like white or a picture
 # 2. Change color of boarders, maybe red
 # 3. Create various levels
 # 4. Create a game winning screen
+# FINAL TODO:
+# ADD MAX FORCE AND ADD FRICTION
+
 
 #Our PUCK CLASS :)))
 class Puck:
-    def __init__(self, mass, velocity, position, charge, radius):
+    def __init__(self, mass, velocity, position, charge, radius, color):
         #initializing stuffssss
         self.mass = mass
         self.velocity = velocity
@@ -32,7 +39,8 @@ class Puck:
         self.position = position
         self.netForce = vector(0,0,0)
         self.radius = radius
-        self.shape = cylinder(pos=self.position, axis=vector(0,0,1), radius = 5)
+        self.color = color
+        self.shape = cylinder(pos=self.position, axis=vector(0,0,1), radius = self.radius, color=self.color)
     
     # Calculate the net force of the charges on the puck
     def calcNetForce(self, forceCreators):
@@ -43,12 +51,13 @@ class Puck:
         
     # Make sure the puck doesn't go through the boundaries
     def checkBoundary(self):
+        # 5 is boundary thickness
         if (self.position.x + self.radius + self.velocity.x > (boundaryRight3D.pos.x - 5)):
             self.position.x = boundaryRight3D.pos.x - 5 - self.radius
             self.velocity.x = - self.velocity.x
         
 
-        if (self.position.x + self.radius + self.velocity.x < (boundaryLeft3D.pos.x + 5)):
+        if (self.position.x - self.radius + self.velocity.x < (boundaryLeft3D.pos.x + 5)):
             self.position.x = boundaryLeft3D.pos.x + self.radius + 5
             self.velocity.x = - self.velocity.x
 
@@ -56,28 +65,28 @@ class Puck:
             self.position.y = boundaryTop3D.pos.y - self.radius - 5
             self.velocity.y = - self.velocity.y
 
-        if (self.position.y + self.radius + self.velocity.y < (boundaryBottom3D.pos.y + 5)):
+        if (self.position.y - self.radius + self.velocity.y < (boundaryBottom3D.pos.y + 5)):
             self.position.y = boundaryBottom3D.pos.y + self.radius + 5
             self.velocity.y = - self.velocity.y
             
     # Obstacle collision, prevents puck from going through obstacles
     def checkObstacles(self, obstacle):
         if (self.touchingObstacleLeftBounds(obstacle) and self.position.y < obstacle.topBox.pos.y and self.position.y > obstacle.bottomBox.pos.y):
-            self.position.x = obstacle.leftBox.pos.x - 5
+            self.position.x = obstacle.leftBox.pos.x - self.radius
             self.velocity.x = - self.velocity.x
         if (self.touchingObstacleRightBounds(obstacle) and self.position.y < obstacle.topBox.pos.y and self.position.y > obstacle.bottomBox.pos.y):
-            self.position.x = obstacle.leftBox.pos.x + 5
+            self.position.x = obstacle.leftBox.pos.x + self.radius
             self.velocity.x = - self.velocity.x
         if (self.touchingObstacleBottomBounds(obstacle) and self.position.x < obstacle.rightBox.pos.x and self.position.x > obstacle.leftBox.pos.x):
-            self.position.y = obstacle.bottomBox.pos.y - 5
+            self.position.y = obstacle.bottomBox.pos.y - self.radius
             self.velocity.y = - self.velocity.y
         if (self.touchingObstacleTopBounds(obstacle) and self.position.x < obstacle.rightBox.pos.x and self.position.x > obstacle.leftBox.pos.x):
-            self.position.y = obstacle.Top.pos.y + 5
+            self.position.y = obstacle.Top.pos.y + self.radius
             self.velocity.y = - self.velocity.y
             
     # Make sure the puck doesn't go through the charges
     def checkCharges(self, charges):
-        if (mag(self.position - charges.position) < 10):
+        if (mag(self.position - charges.position + self.velocity) < 10):
             self.velocity.x = - self.velocity.x
             self.velocity.y = - self.velocity.y
             
@@ -263,6 +272,11 @@ class GoalAnimation():
         else:
             self.timer = 0
 
+class Arena():
+    def __init__(self):
+        self.bg = box(pos=vector(0,0,-10), length=400, height=200, width=5, color=vector(0.34, 0.33, 0.33), opacity=0.4)
+        self.midline = box(pos=vector(0,0,-10), length=20, opacity = 0.4, height = 200, width = 5, color=vector(0.6, 0, 0))
+
 def mouseDownEventHandler():
     #if mouse is in the charge box and mousedown is pressed
     if (mouse.gameMode == "Simulation"):
@@ -307,7 +321,7 @@ class Level():
         self.name = name
         self.obstacles = obst
         self.forceCreatorsList = forceCreators
-        self.puck = Puck(1, vector(0, 0, 0), puckStartLocation, pow(10, -3), 5)
+        self.puck = Puck(1, vector(0, 0, 0), puckStartLocation, pow(10, -3), 5, color.black)
         self.goal = Goal(goalStartLocation)
         self.electricField = ElectricField(self.forceCreatorsList)
         self.chargeList = []
@@ -343,15 +357,25 @@ def addLevels():
     obstacle1 = [BoxObstacle(vector(80, 0, 0), 0, 50, 20)]
     levels.append(Level("1", obstacle1, vector(0,0,0), vector(-75, 0, 0), forceCreator1) )
 
+
+def changePuckSize(slider):
+    for le in levels:
+        le.puck.shape.radius=slider.value
+
+
+
+
+#Declarations: our charge holders where you can drag charges from and or mouse and startMenu classes
+arena = Arena()
+positiveChargeHolder = ChargeHolder(vector(160, 115, 0), 1)
+negativeChargeHolder = ChargeHolder(vector(185, 115, 0), -1)
+mouse = StupidMouse()
+start = StartMenu()
+
+
 # Levels (list)
 levels = []
 addLevels()
-
-#Declarations: our charge holders where you can drag charges from and or mouse and startMenu classes
-positiveChargeHolder = ChargeHolder(vector(100, 130, 0), 1)
-negativeChargeHolder = ChargeHolder(vector(120, 130, 0), -1)
-mouse = StupidMouse()
-start = StartMenu()
 
 goalAnimation = GoalAnimation()
 
@@ -359,9 +383,8 @@ goalAnimation = GoalAnimation()
 scene.bind("mousedown", mouseDownEventHandler)
 scene.bind("mouseup", mouseUpEventHandler)
 scene.bind("click", mouseClickHandler)
-
-#check box :))
 checkbox(bind=ElectricFieldToggler, text="Show Electric Field")
+slider(bind=changePuckSize, min=5, max=10, step=1, text="Puck Size")
 
 while(True):
     rate(runRate)
