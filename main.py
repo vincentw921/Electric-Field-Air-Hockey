@@ -354,6 +354,7 @@ class Level():
         self.electricField = ElectricField(self.forceCreatorsList)
         self.chargeList = []
         
+     
     def startLevel(self, gameMode):
         if (level == int(self.name) and gameMode == "Simulation"):
             for obstacle in self.obstacles:
@@ -362,6 +363,8 @@ class Level():
                 obstacle.shape.visible = True
             for charge in self.forceCreatorsList:
                 charge.shape.visible = True
+            for goalPiece in self.goal.shape:
+                goalPiece.shape.visible = True
             self.puck.shape.visible = True
             self.goal.shape.visible = True
         else:
@@ -371,6 +374,9 @@ class Level():
                 obstacle.shape.visible = False
             for charge in self.forceCreatorsList:
                 charge.shape.visible = False
+            for goalPiece in self.goal.shape:
+                goalPiece.shape.visible = False
+                
             self.puck.shape.visible = False
             self.goal.shape.visible = False
             
@@ -416,6 +422,8 @@ start = StartMenu()
 # Levels (list)
 levels = []
 addLevels()
+for lev in levels:
+    lev.startLevel(mouse.gameMode)
 
 goalAnimation = GoalAnimation()
 
