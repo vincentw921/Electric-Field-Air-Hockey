@@ -437,6 +437,10 @@ def changePuckSize(slider):
 def changePuckMass(slider):
     for le in levels:
         le.puck.mass = slider.value
+
+def levelNumber():
+    return level        
+
 def resetLevel():
     addLevels()
 
@@ -468,6 +472,8 @@ slider(bind=changePuckSize, min=5, max=10, step=1, pos=scene.caption_anchor)
 wtext(text="\n\nPuck Mass")
 slider(bind=changePuckMass, min=1, max=10, step=1, pos=scene.caption_anchor)
 button(bind=resetLevel, text="Reset Level", pos=scene.caption_anchor)
+wtext(text="\n\nLevel")
+levelSlider = slider(bind=levelNumber,min=0, max=len(levels), step=1, pos=scene.caption_anchor)
 
 while(True):
     rate(runRate)
@@ -477,6 +483,7 @@ while(True):
         start.bg.visible = True
         start.play.visible = True
     if (mouse.gameMode == "Simulation"):
+        levelSlider.value = level
         positiveChargeHolder.text.visible = True
         negativeChargeHolder.text.visible = True
         mouseFollower.update(levels[level].puck.position)
