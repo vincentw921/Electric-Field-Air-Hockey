@@ -302,15 +302,43 @@ class Arena():
     def __init__(self):
         self.bg = box(pos=vector(0,0,-10), length=410, height=200, width=5, color=vector(0.34, 0.33, 0.33), opacity=0.4)
         self.midline = box(pos=vector(0,0,-10), length=20, opacity = 0.4, height = 200, width = 5, color=vector(0.6, 0, 0))
+        
+class MouseFollower():
+    def __init__(self, charge):
+        self.circle = sphere(pos=scene.mouse.pos, radius=5, color= (color.red if charge > 0 else color.blue))
+        self.velocity = arrow(pos=self.circle.pos, axis=vector(0,0,0), color=color.green)
+        self.velocity.visible = False
+        self.circle.visible = False
+    
+    def update(self, puckPos):
+        self.circle.pos = scene.mouse.pos
+        self.updateForceDirection(puckPos)
+        
+    def calculateForceDirection(self, puckPos):
+        direction = puckPos - self.circle.pos
+        direction = direction / mag(direction)
+        return direction
+    
+    def updateForceDirection(self, puckPos):
+        self.velocity.pos = self.circle.pos
+        self.velocity.axis = self.calculateForceDirection(puckPos)
+        
+    def hide(self):
+        self.circle.visible = False
+        self.velocity.visible = False
 
 def mouseDownEventHandler():
     #if mouse is in the charge box and mousedown is pressed
     if (mouse.gameMode == "Simulation"):
         if (scene.mouse.pos.x < positiveChargeHolder.position.x + 10 and scene.mouse.pos.x > positiveChargeHolder.position.x - 10 and scene.mouse.pos.y < positiveChargeHolder.position.y + 10 and scene.mouse.pos.y > positiveChargeHolder.position.y - 10):
             mouse.picked = True
+            mouseFollower = MouseFollower(1)
+            mouseFollower.circle.visible = True
             mouse.currCharge = "Positive"
         if (scene.mouse.pos.x < negativeChargeHolder.position.x + 10 and scene.mouse.pos.x > negativeChargeHolder.position.x - 10 and scene.mouse.pos.y < negativeChargeHolder.position.y + 10 and scene.mouse.pos.y > negativeChargeHolder.position.y - 10):
             mouse.picked = True
+            mouseFollower = MouseFollower(-1)
+            mouseFollower.circle.visible = True
             mouse.currCharge = "Negative"
         
 def mouseUpEventHandler():
@@ -319,12 +347,13 @@ def mouseUpEventHandler():
             levels[level].forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 1 * pow(10, -3), color.red, True))
             levels[level].updateElectricField()
             levels[level].chargeList.append(chargeObstacle(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 0, 5, color.red))
+            mouseFollower.circle.visible = False
             mouse.picked = False
         elif (mouse.picked and mouse.currCharge == "Negative"):
             levels[level].forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), -1 * pow(10, -3), color.blue, True))
             levels[level].updateElectricField()
             levels[level].chargeList.append(chargeObstacle(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 0, 5, color.blue))
-
+            mouseFollower.circle.visible = False
             mouse.picked = False
         mouse.currCharge = "None"
 
@@ -341,6 +370,12 @@ def ElectricFieldToggler(checkbox):
         levels[level].electricField.enableElectricField()
     else:
         levels[level].electricField.disableElectricField()
+        
+def ForceDirectionToggler(checkbox):
+    if (checkbox.checked and mouse.gameMode == "Simulation" and mouse.picked == True):
+        mouseFollower.velocity.visible = True
+    else:
+        mouseFollower.velocity.visible = False
         
 class Level():
     def __init__(self, name, obst, goalStartLocation, puckStartLocation, forceCreators):
@@ -408,6 +443,10 @@ def changePuckSize(slider):
 def changePuckMass(slider):
     for le in levels:
         le.puck.mass = slider.value
+
+def levelNumber():
+    return level        
+
 def resetLevel():
     addLevels()
 
@@ -417,6 +456,7 @@ positiveChargeHolder = ChargeHolder(vector(160, 115, 0), 1)
 negativeChargeHolder = ChargeHolder(vector(185, 115, 0), -1)
 mouse = StupidMouse()
 start = StartMenu()
+mouseFollower = MouseFollower(-1)
 
 
 # Levels (list)
@@ -431,12 +471,17 @@ goalAnimation = GoalAnimation()
 scene.bind("mousedown", mouseDownEventHandler)
 scene.bind("mouseup", mouseUpEventHandler)
 scene.bind("click", mouseClickHandler)
+
 checkbox(bind=ElectricFieldToggler, text="Show Electric Field")
+checkbox(bind=ForceDirectionToggler, text="Show Force Direction")
+
 wtext(text="\n\nPuck Size")
 slider(bind=changePuckSize, min=5, max=10, step=1, pos=scene.caption_anchor)
 wtext(text="\n\nPuck Mass")
 slider(bind=changePuckMass, min=1, max=10, step=1, pos=scene.caption_anchor)
 button(bind=resetLevel, text="Reset Level", pos=scene.caption_anchor)
+wtext(text="\n\nLevel")
+levelSlider = slider(bind=levelNumber,min=0, max=len(levels), step=1, pos=scene.caption_anchor)
 
 while(True):
     rate(runRate)
@@ -446,8 +491,10 @@ while(True):
         start.bg.visible = True
         start.play.visible = True
     if (mouse.gameMode == "Simulation"):
+        levelSlider.value = level
         positiveChargeHolder.text.visible = True
         negativeChargeHolder.text.visible = True
+        mouseFollower.update(levels[level].puck.position)
         for lev in levels:
             lev.startLevel(mouse.gameMode)
         for object in levels[level].forceCreatorsList:           
