@@ -4,7 +4,7 @@ Web VPython 3.2
 #Constants
 runRate = 200 #50 times a second
 elasticity = 1 #NOT USED
-level = 0 #Current Level
+ #Current Level
 #Background
 scene.background = vector(0,0,0) #RGB but out of 1
 scene.userzoom = False # No zooming or spinning :(
@@ -20,11 +20,6 @@ boundaryRight3D = box(pos=vector(200, 0, 0), length=5, width=5, height=200, colo
 boundaryTop3D = box(pos=vector(0, 100, 0), length=405, width=5, height=5, color=vector(54.5, 0, 0))  
 boundaryBottom3D = box(pos=vector(0, -100, 0), length=405, width=5, height=5, color=vector(54.5, 0, 0))  
 
-# TODO: LIST:
-# 1. Add a different background, like white or a picture
-# 2. Change color of boarders, maybe red
-# 3. Create various levels
-# 4. Create a game winning screen
 # FINAL TODO:
 # ADD MAX FORCE AND ADD FRICTION
 
@@ -40,6 +35,7 @@ class Puck:
         self.netForce = vector(0,0,0)
         self.radius = radius
         self.color = color
+        self.friction = 0
         self.shape = cylinder(pos=self.position, axis=vector(0,0,1), radius = self.radius, color=self.color)
     
     # Calculate the net force of the charges on the puck
@@ -47,10 +43,10 @@ class Puck:
         distanceVector = self.position - forceCreators.position
         maxDistanceVector = abs(self.radius + 5)
         forceMag = (1 / (4 * pi* 8.85 * pow(10, -12))) * ((self.charge * forceCreators.charge) / pow(mag(distanceVector), 2))
-        
         if (abs(forceMag) > abs((1 / (4 * pi* 8.85 * pow(10, -12))) * ((self.charge * forceCreators.charge) / pow(maxDistanceVector, 2)))):
             forceMag = 0
         forceVector = vector((forceMag * distanceVector.x) / mag(distanceVector), (forceMag * distanceVector.y) / mag(distanceVector), 0) 
+        
         self.netForce = forceVector
         
     # Make sure the puck doesn't go through the boundaries
@@ -138,7 +134,13 @@ class Puck:
         for o in goal.shape:
             self.touchingGoal(o)
         # print(self.velocity)
-        self.velocity = self.velocity + (self.netForce / self.mass) * (1 / runRate)
+        frictionalForce = - (norm(self.velocity)*self.friction*9.81)
+
+        
+            
+        self.velocity = self.velocity + ((self.netForce)/ self.mass) * (1 / runRate)
+        self.velocity = self.velocity + (frictionalForce * (1/runRate))
+        
         self.position = self.position + self.velocity
         self.shape.pos = self.position
 
@@ -265,6 +267,7 @@ class StupidMouse():
         self.currCharge = None
         #Simulation, HomeScreen
         self.gameMode = "Homescreen"
+        self.level = 0
 class StartMenu():
     def __init__(self):
         self.currPick = "NONE"
@@ -301,59 +304,49 @@ class GoalAnimation():
 class Arena():
     def __init__(self):
         self.bg = box(pos=vector(0,0,-10), length=410, height=200, width=5, color=vector(0.34, 0.33, 0.33), opacity=0.4)
-        self.midline = box(pos=vector(0,0,-10), length=20, opacity = 0.4, height = 200, width = 5, color=vector(0.6, 0, 0))
-        
-class MouseFollower():
-    def __init__(self, charge):
-        self.circle = sphere(pos=scene.mouse.pos, radius=5, color= (color.red if charge > 0 else color.blue))
-        self.velocity = arrow(pos=self.circle.pos, axis=vector(0,0,0), color=color.green)
-        self.velocity.visible = False
-        self.circle.visible = False
-    
-    def update(self, puckPos):
-        self.circle.pos = scene.mouse.pos
-        self.updateForceDirection(puckPos)
-        
-    def calculateForceDirection(self, puckPos):
-        direction = puckPos - self.circle.pos
-        direction = direction / mag(direction)
-        return direction
-    
-    def updateForceDirection(self, puckPos):
-        self.velocity.pos = self.circle.pos
-        self.velocity.axis = self.calculateForceDirection(puckPos)
-        
-    def hide(self):
-        self.circle.visible = False
-        self.velocity.visible = False
+        self.outerCircle = cylinder(pos=vector(0,0,-10), axis=vector(0,0,1), radius = 24, color=vector(0.6,0,0), opacity=0.7)
+        self.innerCirclev1 = cylinder(pos=vector(0,0,-9), axis=vector(0,0,1), radius = 20, color=vector(0.34, 0.33, 0.33), color=color.white)
+
+        self.innerCircle = cylinder(pos=vector(0,0,-8), axis=vector(0,0,1), radius = 20, color=vector(0.34, 0.33, 0.33), opacity=0.7)
+        self.midline = box(pos=vector(0,0,-6), length=8, opacity = 0.7, height = 200, width = 5, color=vector(0.6, 0, 0))
+
+
 
 def mouseDownEventHandler():
     #if mouse is in the charge box and mousedown is pressed
     if (mouse.gameMode == "Simulation"):
         if (scene.mouse.pos.x < positiveChargeHolder.position.x + 10 and scene.mouse.pos.x > positiveChargeHolder.position.x - 10 and scene.mouse.pos.y < positiveChargeHolder.position.y + 10 and scene.mouse.pos.y > positiveChargeHolder.position.y - 10):
             mouse.picked = True
-            mouseFollower = MouseFollower(1)
-            mouseFollower.circle.visible = True
             mouse.currCharge = "Positive"
+            mouseFollower.circle.color = color.red
+            mouseFollower.circle.visible = True
+            mouseFollower.velocity.visible = True
+
         if (scene.mouse.pos.x < negativeChargeHolder.position.x + 10 and scene.mouse.pos.x > negativeChargeHolder.position.x - 10 and scene.mouse.pos.y < negativeChargeHolder.position.y + 10 and scene.mouse.pos.y > negativeChargeHolder.position.y - 10):
             mouse.picked = True
-            mouseFollower = MouseFollower(-1)
-            mouseFollower.circle.visible = True
             mouse.currCharge = "Negative"
+            mouseFollower.circle.color = color.blue
+            mouseFollower.circle.visible = True
+            mouseFollower.velocity.visible = True
+
         
 def mouseUpEventHandler():
     if (mouse.gameMode == "Simulation"):
         if (mouse.picked and mouse.currCharge == "Positive"):
-            levels[level].forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 1 * pow(10, -3), color.red, True))
-            levels[level].updateElectricField()
-            levels[level].chargeList.append(chargeObstacle(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 0, 5, color.red))
+            levels[mouse.level].forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 1 * pow(10, -3), color.red, True))
+            levels[mouse.level].updateElectricField()
+            levels[mouse.level].chargeList.append(chargeObstacle(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 0, 5, color.red))
             mouseFollower.circle.visible = False
+            mouseFollower.velocity.visible = False
+
             mouse.picked = False
         elif (mouse.picked and mouse.currCharge == "Negative"):
-            levels[level].forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), -1 * pow(10, -3), color.blue, True))
-            levels[level].updateElectricField()
-            levels[level].chargeList.append(chargeObstacle(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 0, 5, color.blue))
+            levels[mouse.level].forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), -1 * pow(10, -3), color.blue, True))
+            levels[mouse.level].updateElectricField()
+            levels[mouse.level].chargeList.append(chargeObstacle(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 0, 5, color.blue))
             mouseFollower.circle.visible = False
+            mouseFollower.velocity.visible = False
+
             mouse.picked = False
         mouse.currCharge = "None"
 
@@ -365,17 +358,37 @@ def mouseClickHandler():
             start.play.visible = False
 
 def ElectricFieldToggler(checkbox):
-    if (checkbox.checked and len(levels[level].forceCreatorsList) > 0 and mouse.gameMode == "Simulation"):
-        print("activated")
-        levels[level].electricField.enableElectricField()
+    if (checkbox.checked and len(levels[mouse.level].forceCreatorsList) > 0 and mouse.gameMode == "Simulation"):
+        levels[mouse.level].electricField.enableElectricField()
     else:
-        levels[level].electricField.disableElectricField()
+        levels[mouse.level].electricField.disableElectricField()
         
-def ForceDirectionToggler(checkbox):
-    if (checkbox.checked and mouse.gameMode == "Simulation" and mouse.picked == True):
-        mouseFollower.velocity.visible = True
-    else:
-        mouseFollower.velocity.visible = False
+class MouseFollower():
+    def __init__(self, charge):
+        self.circle = cylinder(pos=scene.mouse.pos, axis=vector(0,0,1), radius=5, color=color.red)
+        self.velocity = arrow(pos=vector(scene.mouse.pos.x, scene.mouse.pos.y, 5), axis=vector(0,0,0), color=color.green, length= 15, opacity=1)
+        self.velocity.visible = False
+        self.circle.visible = False
+        
+
+    def update(self, puckPos):
+        self.circle.pos = scene.mouse.pos
+        self.updateForceDirection(puckPos)
+
+    def calculateForceDirection(self, puckPos):
+        direction = puckPos - self.circle.pos
+        if (mouse.currCharge == "Negative"):
+            direction = - direction
+        return norm(direction) * 15
+
+    def updateForceDirection(self, puckPos):
+        
+        self.velocity.pos = scene.mouse.pos
+        self.velocity.axis = self.calculateForceDirection(puckPos)
+
+    def hide(self):
+        self.circle.visible = False
+        self.velocity.visible = False
         
 class Level():
     def __init__(self, name, obst, goalStartLocation, puckStartLocation, forceCreators):
@@ -391,7 +404,7 @@ class Level():
         
      
     def startLevel(self, gameMode):
-        if (level == int(self.name) and gameMode == "Simulation"):
+        if (mouse.level == int(self.name) and gameMode == "Simulation"):
             for obstacle in self.obstacles:
                 obstacle.shape.visible = True
             for obstacle in self.chargeList:
@@ -435,6 +448,11 @@ def addLevels():
     obstacle4 = [BoxObstacle(vector(25,-50,0), 0, 10, 100), BoxObstacle(vector(50,50,0), 0, 10, 100), BoxObstacle(vector(75, -50, 0), 0, 10, 100), BoxObstacle(vector(100, 0, 0), 0, 10, 100)]
     levels.append(Level("3", obstacle4, vector(150,-25,0), vector(-75, 0, 0), forceCreator4) )
 
+def ForceDirectionToggler(checkbox):
+    if (checkbox.checked and mouse.gameMode == "Simulation" and mouse.picked):
+        mouseFollower.velocity.visible = True
+    else:
+        mouseFollower.velocity.visible = False
 
 def changePuckSize(slider):
     for le in levels:
@@ -444,11 +462,18 @@ def changePuckMass(slider):
     for le in levels:
         le.puck.mass = slider.value
 
-def levelNumber():
-    return level        
-
+def changeFriction(slider):
+    for le in levels:
+        le.puck.friction = slider.value
+        
 def resetLevel():
     addLevels()
+def nextLevel():
+    
+    mouse.level = mouse.level + 1
+    addLevels()
+    
+    
 
 #Declarations: our charge holders where you can drag charges from and or mouse and startMenu classes
 arena = Arena()
@@ -471,17 +496,16 @@ goalAnimation = GoalAnimation()
 scene.bind("mousedown", mouseDownEventHandler)
 scene.bind("mouseup", mouseUpEventHandler)
 scene.bind("click", mouseClickHandler)
-
 checkbox(bind=ElectricFieldToggler, text="Show Electric Field")
 checkbox(bind=ForceDirectionToggler, text="Show Force Direction")
-
 wtext(text="\n\nPuck Size")
 slider(bind=changePuckSize, min=5, max=10, step=1, pos=scene.caption_anchor)
 wtext(text="\n\nPuck Mass")
 slider(bind=changePuckMass, min=1, max=10, step=1, pos=scene.caption_anchor)
+wtext(text="\n\nCoefficient of Friction (0 means none)")
+slider(bind=changeFriction, min=0, max=0.1, step=0.01, pos=scene.caption_anchor)
 button(bind=resetLevel, text="Reset Level", pos=scene.caption_anchor)
-wtext(text="\n\nLevel")
-levelSlider = slider(bind=levelNumber,min=0, max=len(levels), step=1, pos=scene.caption_anchor)
+button(bind=nextLevel, text="Next Level")
 
 while(True):
     rate(runRate)
@@ -491,28 +515,44 @@ while(True):
         start.bg.visible = True
         start.play.visible = True
     if (mouse.gameMode == "Simulation"):
-        levelSlider.value = level
         positiveChargeHolder.text.visible = True
         negativeChargeHolder.text.visible = True
-        mouseFollower.update(levels[level].puck.position)
+        mouseFollower.update(levels[mouse.level].puck.position)
+
         for lev in levels:
             lev.startLevel(mouse.gameMode)
-        for object in levels[level].forceCreatorsList:           
-            levels[level].puck.update(object, levels[level].obstacles, levels[level].chargeList, levels[level].goal)
-        if (levels[level].goal.inGoal(levels[level].puck)):
+        for object in levels[mouse.level].forceCreatorsList:           
+            levels[mouse.level].puck.update(object, levels[mouse.level].obstacles, levels[mouse.level].chargeList, levels[mouse.level].goal)
+        if (levels[mouse.level].goal.inGoal(levels[mouse.level].puck)):
             mouse.gameMode = "GOAL"
-            level = level + 1
-            if (level >= len(levels)):
-                level = -1
+            mouse.level = mouse.level + 1
+            if (mouse.level >= len(levels)):
+                mouse.level = -1
                 for lev in levels:
                     lev.startLevel(mouse.gameMode)
-                level = 0
+                mouse.level = 0
                 mouse.gameMode = "Homescreen"
                 levels = []
                 addLevels()
-            electricField = ElectricField(levels[level].forceCreatorsList)
+            electricField = ElectricField(levels[mouse.level].forceCreatorsList)
             
     if (mouse.gameMode == "GOAL"):
             goalAnimation.update()
 
     #when click and drag add a new point charge to a list, then run the loop through puck and update everyonel
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
