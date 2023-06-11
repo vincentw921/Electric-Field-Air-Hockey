@@ -74,16 +74,16 @@ class Puck:
             
     # Obstacle collision, prevents puck from going through obstacles
     def checkObstacles(self, obstacle):
-        if (self.touchingObstacleLeftBounds(obstacle) and self.position.y < obstacle.topBox.pos.y and self.position.y > obstacle.bottomBox.pos.y):
+        if (self.touchingObstacleLeftBounds(obstacle) and (self.position.y - self.radius) < obstacle.topBox.pos.y and (self.position.y + self.radius) > obstacle.bottomBox.pos.y):
             self.position.x = obstacle.leftBox.pos.x - self.radius - 5
             self.velocity.x = - self.velocity.x
-        if (self.touchingObstacleRightBounds(obstacle) and self.position.y < obstacle.topBox.pos.y and self.position.y > obstacle.bottomBox.pos.y):
-            self.position.x = obstacle.leftBox.pos.x + self.radius + 5
+        if (self.touchingObstacleRightBounds(obstacle) and (self.position.y - self.radius) < obstacle.topBox.pos.y and (self.position.y + self.radius) > obstacle.bottomBox.pos.y):
+            self.position.x = obstacle.rightBox.pos.x + self.radius + 5
             self.velocity.x = - self.velocity.x
-        if (self.touchingObstacleBottomBounds(obstacle) and self.position.x < obstacle.rightBox.pos.x and self.position.x > obstacle.leftBox.pos.x):
+        if (self.touchingObstacleBottomBounds(obstacle) and (self.position.x - self.radius) < obstacle.rightBox.pos.x and (self.position.x + self.radius) > obstacle.leftBox.pos.x):
             self.position.y = obstacle.bottomBox.pos.y - self.radius - 5
             self.velocity.y = - self.velocity.y
-        if (self.touchingObstacleTopBounds(obstacle) and self.position.x < obstacle.rightBox.pos.x and self.position.x > obstacle.leftBox.pos.x):
+        if (self.touchingObstacleTopBounds(obstacle) and (self.position.x - self.radius) < obstacle.rightBox.pos.x and (self.position.x + self.radius) > obstacle.leftBox.pos.x):
             self.position.y = obstacle.topBox.pos.y + self.radius + 5
             self.velocity.y = - self.velocity.y
     def touchingGoal(self, obstacle):
@@ -91,7 +91,7 @@ class Puck:
             self.position.x = obstacle.leftBox.pos.x - self.radius - 5
             self.velocity.x = - self.velocity.x
         if (self.touchingObstacleRightBounds(obstacle) and self.position.y < obstacle.topBox.pos.y and self.position.y > obstacle.bottomBox.pos.y):
-            self.position.x = obstacle.leftBox.pos.x + self.radius + 5
+            self.position.x = obstacle.rightBox.pos.x + self.radius + 5
             self.velocity.x = - self.velocity.x
         if (self.touchingObstacleBottomBounds(obstacle) and self.position.x < obstacle.rightBox.pos.x and self.position.x > obstacle.leftBox.pos.x):
             self.position.y = obstacle.bottomBox.pos.y - self.radius - 5
@@ -225,14 +225,14 @@ class BoxObstacle(Obstacles):
         self.length = length
         self.width = width
         self.shape = box(pos=self.position, length = self.length, width=5, height=self.width)
-        self.topBox = box(pos=self.position + vector(0, self.width/2 - 1, 0), length = self.length, width = 5, height = 1, color=color.blue)
-        self.bottomBox = box(pos=(self.position - vector(0, self.width/2 - 1, 0)), length = self.length, width = 5, height = 1, color=color.red)
-        self.leftBox = box(pos=(self.position - vector(self.length/2 - 1, 0, 0)), length = 1, width = 5, height = self.width, color=color.green)
-        self.rightBox = box(pos=self.position + vector(self.length/2 - 1, 0, 0), length = 1, width = 5, height = self.width, color=color.orange)
-        self.topBox.visible = False
-        self.bottomBox.visible = False
-        self.leftBox.visible = False
-        self.rightBox.visible = False
+        self.topBox = box(pos=self.position + vector(0, self.width/2 - 1, 0), length = self.length, width = 5, height = 5, color=color.blue)
+        self.bottomBox = box(pos=(self.position - vector(0, self.width/2 - 1, 0)), length = self.length, width = 5, height = 5, color=color.red)
+        self.leftBox = box(pos=(self.position - vector(self.length/2 - 1, 0, 0)), length = 5, width = 5, height = self.width, color=color.green)
+        self.rightBox = box(pos=self.position + vector(self.length/2 - 1, 0, 0), length = 5, width = 5, height = self.width, color=color.orange)
+        # self.topBox.visible = False
+        # self.bottomBox.visible = False
+        # self.leftBox.visible = False
+        # self.rightBox.visible = False
 
     # get the bounds of the box
     def getVertices(self):
@@ -299,7 +299,7 @@ class GoalAnimation():
             self.timer = self.timer + 1
             self.bg.visible = True
             self.goal.visible = True
-            if (self.timer > 100):
+            if (self.timer > 300):
                 self.timer = 0
                 self.bg.visible = False
                 self.goal.visible = False
@@ -448,8 +448,8 @@ def addLevels():
     obstacle0 = []
     levels.append(Level("0", obstacle0, vector(150, -25, 0), vector(-50, 0, 0), forceCreator0) )
     forceCreator2 = []
-    obstacle2 = [BoxObstacle(vector(100,0,0), 0, 50, 20), BoxObstacle(vector(100,0,0), 0, 50, -20)]
-    levels.append(Level("1", obstacle2, vector(150,-25,0), vector(-75, 0, 0), forceCreator2) )
+    obstacle2 = [BoxObstacle(vector(-50,-50,0), 0, 100, 20)]
+    levels.append(Level("1", obstacle2, vector(150,-25,0), vector(0, 0, 0), forceCreator2) )
     forceCreator3 = []
     obstacle3 = [BoxObstacle(vector(100,0,0), 0, 50, 20), BoxObstacle(vector(100,0,0), 0, 50, -20), BoxObstacle(vector(100,0,0), 0, 50, 60)]
     levels.append(Level("2", obstacle3, vector(150,-25,0), vector(-75, 0, 0), forceCreator3) )
@@ -519,6 +519,7 @@ checkbox(bind=PuckForceDirectionToggler, text="Show Force Vector on Puck")
 checkbox(bind=PuckVelocityDirectionToggler, text="Show Velocity Vector on Puck")
 wtext(text="\n\nPuck Size")
 slider(bind=changePuckSize, min=5, max=10, step=1, pos=scene.caption_anchor)
+puckSize = wtext(text=levels[mouse.level].puck.shape.radius)
 wtext(text="\n\nPuck Mass")
 slider(bind=changePuckMass, min=1, max=10, step=1, pos=scene.caption_anchor)
 wtext(text="\n\nCoefficient of Friction (0 means none)")
@@ -534,7 +535,7 @@ while(True):
         start.play.visible = True
     if (mouse.gameMode == "Simulation"):
         levelCounter.text = (mouse.level + 1)
-
+        puckSize.text = levels[mouse.level].puck.shape.radius
         positiveChargeHolder.text.visible = True
         negativeChargeHolder.text.visible = True
         mouseFollower.update(levels[mouse.level].puck.position)
