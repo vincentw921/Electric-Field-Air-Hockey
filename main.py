@@ -26,7 +26,7 @@ boundaryBottom3D = box(pos=vector(0, -100, 0), length=405, width=5, height=5, co
 
 #Our PUCK CLASS :)))
 class Puck:
-    def __init__(self, mass, velocity, position, charge, radius, color):
+    def __init__(self, mass, velocity, position, charge, radius):
         #initializing stuffssss
         self.mass = mass
         self.velocity = velocity
@@ -34,9 +34,12 @@ class Puck:
         self.position = position
         self.netForce = vector(0,0,0)
         self.radius = radius
-        self.color = color
         self.friction = 0
-        self.shape = cylinder(pos=self.position, axis=vector(0,0,1), radius = self.radius, color=self.color)
+        self.shape = cylinder(pos=self.position, axis=vector(0,0,1), radius = self.radius, color=color.black)
+        self.forceVector = arrow(pos=self.position + vector(0,0,5), axis=vector(0,0,0), length=15, color=color.green)
+        self.velocityVector = arrow(pos=self.position + vector(0,0,5), axis=vector(0,0,0), length=15, color=color.white)
+        self.forceVector.visible = False
+        self.velocityVector.visible = False
     
     # Calculate the net force of the charges on the puck
     def calcNetForce(self, forceCreators):
@@ -140,9 +143,12 @@ class Puck:
             
         self.velocity = self.velocity + ((self.netForce)/ self.mass) * (1 / runRate)
         self.velocity = self.velocity + (frictionalForce * (1/runRate))
-        
+        self.forceVector.axis = self.netForce * 15
+        self.velocityVector.axis = self.velocity * 30
         self.position = self.position + self.velocity
-        self.shape.pos = self.position
+        self.shape.pos = self.position 
+        self.forceVector.pos = self.position + vector(0,0,5)
+        self.velocityVector.pos = self.position + vector(0,0,5)
 
 class Charges:
     def __init__(self, position, charge, chargeColor, showField):
@@ -397,7 +403,7 @@ class Level():
         self.forceCreatorsList = forceCreators
         self.puckStartLocation = puckStartLocation
         self.goalStartLocation = goalStartLocation
-        self.puck = Puck(5, vector(0, 0, 0), puckStartLocation, pow(10, -3), 5, color.black)
+        self.puck = Puck(5, vector(0, 0, 0), puckStartLocation, pow(10, -3), 5)
         self.goal = Goal(goalStartLocation, 20, 45)
         self.electricField = ElectricField(self.forceCreatorsList)
         self.chargeList = []
@@ -424,8 +430,11 @@ class Level():
                 charge.shape.visible = False
             for goalPiece in self.goal.shape:
                 goalPiece.shape.visible = False
-                
+            self.electricField.disableElectricField()
+
             self.puck.shape.visible = False
+            self.puck.forceVector.visible = False
+            self.puck.velocityVector.visible = False
             self.goal.shape.visible = False
             
     def updateElectricField(self):
@@ -448,11 +457,7 @@ def addLevels():
     obstacle4 = [BoxObstacle(vector(25,-50,0), 0, 10, 100), BoxObstacle(vector(50,50,0), 0, 10, 100), BoxObstacle(vector(75, -50, 0), 0, 10, 100), BoxObstacle(vector(100, 0, 0), 0, 10, 100)]
     levels.append(Level("3", obstacle4, vector(150,-25,0), vector(-75, 0, 0), forceCreator4) )
 
-def ForceDirectionToggler(checkbox):
-    if (checkbox.checked and mouse.gameMode == "Simulation" and mouse.picked):
-        mouseFollower.velocity.visible = True
-    else:
-        mouseFollower.velocity.visible = False
+
 
 def changePuckSize(slider):
     for le in levels:
@@ -472,7 +477,17 @@ def nextLevel():
     
     mouse.level = mouse.level + 1
     addLevels()
-    
+
+def PuckForceDirectionToggler(checkbox):
+    if (checkbox.checked):
+        levels[mouse.level].puck.forceVector.visible = True
+    else:
+        levels[mouse.level].puck.forceVector.visible = False
+def PuckVelocityDirectionToggler(checkbox):
+    if (checkbox.checked):
+        levels[mouse.level].puck.velocityVector.visible = True
+    else:
+        levels[mouse.level].puck.velocityVector.visible = False
     
 
 #Declarations: our charge holders where you can drag charges from and or mouse and startMenu classes
@@ -496,8 +511,12 @@ goalAnimation = GoalAnimation()
 scene.bind("mousedown", mouseDownEventHandler)
 scene.bind("mouseup", mouseUpEventHandler)
 scene.bind("click", mouseClickHandler)
+wtext(text="Level: ")
+levelCounter = wtext(text=mouse.level)
+
 checkbox(bind=ElectricFieldToggler, text="Show Electric Field")
-checkbox(bind=ForceDirectionToggler, text="Show Force Direction")
+checkbox(bind=PuckForceDirectionToggler, text="Show Force Vector on Puck")
+checkbox(bind=PuckVelocityDirectionToggler, text="Show Velocity Vector on Puck")
 wtext(text="\n\nPuck Size")
 slider(bind=changePuckSize, min=5, max=10, step=1, pos=scene.caption_anchor)
 wtext(text="\n\nPuck Mass")
@@ -506,7 +525,6 @@ wtext(text="\n\nCoefficient of Friction (0 means none)")
 slider(bind=changeFriction, min=0, max=0.1, step=0.01, pos=scene.caption_anchor)
 button(bind=resetLevel, text="Reset Level", pos=scene.caption_anchor)
 button(bind=nextLevel, text="Next Level")
-
 while(True):
     rate(runRate)
     if (mouse.gameMode == "Homescreen"):
@@ -515,6 +533,8 @@ while(True):
         start.bg.visible = True
         start.play.visible = True
     if (mouse.gameMode == "Simulation"):
+        levelCounter.text = (mouse.level + 1)
+
         positiveChargeHolder.text.visible = True
         negativeChargeHolder.text.visible = True
         mouseFollower.update(levels[mouse.level].puck.position)
@@ -526,6 +546,7 @@ while(True):
         if (levels[mouse.level].goal.inGoal(levels[mouse.level].puck)):
             mouse.gameMode = "GOAL"
             mouse.level = mouse.level + 1
+
             if (mouse.level >= len(levels)):
                 mouse.level = -1
                 for lev in levels:
