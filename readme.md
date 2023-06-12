@@ -1,11 +1,11 @@
 # VJ MANIA
-## Vincent Wang and Jason Zhou
+## By Vincent Wang and Jason Zhou
 
 ### Description
 VJ MANIA is a game inspired by the popular game Air Hockey. The game is played on a single player campaign platform, where the player traverses a large ice board attempting to score a puck into a goal, while avoiding obstacles and placing down point charges to move the puck to the desired location.
 
 ### Instructions
-1. Run the glowscript file titled main.py
+1. Run the glowscript file titled `main`
 2. Then, simply click on the play button to begin the game
 
 ### Features
