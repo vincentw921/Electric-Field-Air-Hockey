@@ -486,11 +486,11 @@ def addLevels():
     obstacle2 = [BoxObstacle(vector(-50,-50,0), 0, 100, 20), BoxObstacle(vector(50,50,0), 0, 100, 20)]
     levels.append(Level("2", obstacle2, vector(150,-25,0), vector(-75, 0, 0), forceCreator2))
     forceCreator3 = []
-    obstacle3 = [BoxObstacle(vector(100,0,0), 0, 50, 20), BoxObstacle(vector(100,0,0), 0, 50, -20), BoxObstacle(vector(100,0,0), 0, 50, 60)]
+    obstacle3 = [BoxObstacle(vector(50,0,0), 0, 50, 20), BoxObstacle(vector(50,0,0), 0, 50, -20), BoxObstacle(vector(50,0,0), 0, 50, 60)]
     levels.append(Level("3", obstacle3, vector(150,-25,0), vector(-75, 0, 0), forceCreator3) )
     forceCreator4 = []
-    obstacle4 = [BoxObstacle(vector(25,-50,0), 0, 10, 100), BoxObstacle(vector(50,50,0), 0, 10, 100), BoxObstacle(vector(75, -50, 0), 0, 10, 100), BoxObstacle(vector(100, 0, 0), 0, 10, 100)]
-    levels.append(Level("4", obstacle4, vector(150,-25,0), vector(-75, 0, 0), forceCreator4) )
+    obstacle4 = [BoxObstacle(vector(-50,-50,0), 0, 10, 100), BoxObstacle(vector(0,50,0), 0, 10, 100), BoxObstacle(vector(50, -50, 0), 0, 10, 100), BoxObstacle(vector(100, 0, 0), 0, 10, 100)]
+    levels.append(Level("4", obstacle4, vector(150,-25,0), vector(-120, 0, 0), forceCreator4) )
 
 
 # Binding method for puck size slider
@@ -572,12 +572,21 @@ slider(bind=changePuckSize, min=5, max=10, step=1, pos=scene.caption_anchor)
 puckSize = wtext(text=levels[mouse.level].puck.shape.radius)
 wtext(text="\n\nPuck Mass")
 slider(bind=changePuckMass, min=1, max=10, step=1, pos=scene.caption_anchor)
+puckMass = wtext(text=levels[mouse.level].puck.mass)
+
 wtext(text="\n\nCoefficient of Friction (0 means none)")
-slider(bind=changeFriction, min=0, max=0.1, step=0.01, pos=scene.caption_anchor)
+slider(bind=changeFriction, min=0, max=0.1, step=0.001, pos=scene.caption_anchor)
+coeffF = wtext(text=levels[mouse.level].puck.friction)
+
 wtext(text="\n\n")
 button(bind=resetLevel, text="Reset Level", pos=scene.caption_anchor)
 button(bind=nextLevel, text="Next Level")
 button(bind=togglePause, text="Go/Stop")
+wtext(text="\nForce Vector: ")
+forceV = wtext(text=levels[mouse.level].puck.forceVector)
+
+wtext(text="\nVelocity Vector: ")
+veloV = wtext(text=levels[mouse.level].puck.velocityVector)
 
 while(True):
     rate(runRate)
@@ -608,7 +617,11 @@ while(True):
             lev.startLevel(mouse.gameMode)
             
         puckSize.text = levels[mouse.level].puck.shape.radius
+        puckMass.text = levels[mouse.level].puck.mass
+        coeffF.text = levels[mouse.level].puck.friction
         mouseFollower.update(levels[mouse.level].puck.position)
+        forceV.text = mag(levels[mouse.level].puck.netForce)
+        veloV.text = mag(levels[mouse.level].puck.velocity)
     if (mouse.gameMode == "GOAL"):
             goalAnimation.update()
 
