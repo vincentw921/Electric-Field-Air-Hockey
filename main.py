@@ -175,7 +175,7 @@ class ElectricField:
                 self.arrowList.append(ar)
 
     # Limit the magnitude of the electric field
-    def squash(x, forceCreatorsList):
+    def getGreatestMag(self, forceCreatorsList):
         greatestMag = 0
         for x in range(-200, 200, 20):
                 for y in range(-100, 100, 20):
@@ -184,7 +184,7 @@ class ElectricField:
                         forceVector = forceVector + object.calculateElectricField(vector(x, y, 0))
                     if (mag(forceVector) > greatestMag):
                         greatestMag = mag(forceVector)
-        return x / greatestMag
+        return greatestMag
     
     # Show the electric field
     def enableElectricField(self):
@@ -199,13 +199,16 @@ class ElectricField:
     # Update the electric field with the new charges
     def updateElectricField(self, forceCreatorsList):
         pos = 0
+        greatestMag = self.getGreatestMag(forceCreatorsList)
+        # print(greatestMag)
         for x in range(-200, 200, 20):
                 for y in range(-100, 100, 20):
                     forceVector = vector(0,0,0)
                     for object in forceCreatorsList:
                         forceVector = forceVector + object.calculateElectricField(vector(x, y, 0))
                     self.arrowList[pos].axis = forceVector
-                    self.arrowList[pos].opacity = self.squash(mag(forceVector))
+                    # print(mag(forceVector))
+                    self.arrowList[pos].opacity = mag(forceVector) / greatestMag
                     self.arrowList[pos].length = 15
                     pos += 1
 
