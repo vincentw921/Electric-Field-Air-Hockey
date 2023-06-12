@@ -229,10 +229,10 @@ class BoxObstacle(Obstacles):
         self.bottomBox = box(pos=(self.position - vector(0, self.width/2 - 1, 0)), length = self.length, width = 5, height = 5, color=color.red)
         self.leftBox = box(pos=(self.position - vector(self.length/2 - 1, 0, 0)), length = 5, width = 5, height = self.width, color=color.green)
         self.rightBox = box(pos=self.position + vector(self.length/2 - 1, 0, 0), length = 5, width = 5, height = self.width, color=color.orange)
-        # self.topBox.visible = False
-        # self.bottomBox.visible = False
-        # self.leftBox.visible = False
-        # self.rightBox.visible = False
+        self.topBox.visible = False
+        self.bottomBox.visible = False
+        self.leftBox.visible = False
+        self.rightBox.visible = False
 
     # get the bounds of the box
     def getVertices(self):
