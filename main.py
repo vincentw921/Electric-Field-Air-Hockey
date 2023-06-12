@@ -610,19 +610,3 @@ while(True):
             goalAnimation.update()
 
     #when click and drag add a new point charge to a list, then run the loop through puck and update everyonel
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
