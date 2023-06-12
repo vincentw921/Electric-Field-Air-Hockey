@@ -274,6 +274,7 @@ class ChargeHolder():
 # Class for storing mouse variables
 class StupidMouse():
     def __init__(self):
+        self.paused = True
         self.picked = False
         self.currCharge = None
         #Simulation, HomeScreen
@@ -475,15 +476,18 @@ def addLevels():
     forceCreator0 = []
     obstacle0 = []
     levels.append(Level("0", obstacle0, vector(150, -25, 0), vector(-50, 0, 0), forceCreator0) )
+    forceCreator1 = []
+    obstacle1 = [BoxObstacle(vector(-50,-50,0), 0, 100, 20)]
+    levels.append(Level("1", obstacle1, vector(150,-25,0), vector(0, 0, 0), forceCreator1) )
     forceCreator2 = []
-    obstacle2 = [BoxObstacle(vector(-50,-50,0), 0, 100, 20)]
-    levels.append(Level("1", obstacle2, vector(150,-25,0), vector(0, 0, 0), forceCreator2) )
+    obstacle2 = [BoxObstacle(vector(-50,-50,0), 0, 100, 20), BoxObstacle(vector(50,50,0), 0, 100, 20)]
+    levels.append(Level("2", obstacle2, vector(150,-25,0), vector(-75, 0, 0), forceCreator2))
     forceCreator3 = []
     obstacle3 = [BoxObstacle(vector(100,0,0), 0, 50, 20), BoxObstacle(vector(100,0,0), 0, 50, -20), BoxObstacle(vector(100,0,0), 0, 50, 60)]
-    levels.append(Level("2", obstacle3, vector(150,-25,0), vector(-75, 0, 0), forceCreator3) )
+    levels.append(Level("3", obstacle3, vector(150,-25,0), vector(-75, 0, 0), forceCreator3) )
     forceCreator4 = []
     obstacle4 = [BoxObstacle(vector(25,-50,0), 0, 10, 100), BoxObstacle(vector(50,50,0), 0, 10, 100), BoxObstacle(vector(75, -50, 0), 0, 10, 100), BoxObstacle(vector(100, 0, 0), 0, 10, 100)]
-    levels.append(Level("3", obstacle4, vector(150,-25,0), vector(-75, 0, 0), forceCreator4) )
+    levels.append(Level("4", obstacle4, vector(150,-25,0), vector(-75, 0, 0), forceCreator4) )
 
 
 # Binding method for puck size slider
@@ -503,13 +507,18 @@ def changeFriction(slider):
         
 # Bind for resetting current level
 def resetLevel():
-    addLevels()
+    if (mouse.gameMode == "Simulation"):
+        addLevels()
 
 # Bind for going to next level
 def nextLevel():
-    
-    mouse.level = mouse.level + 1
-    addLevels()
+    if (mouse.gameMode == "Simulation"):
+        mouse.level = mouse.level + 1
+        addLevels()
+
+# Toggle for stopping and starting the simulation
+def togglePause():
+    mouse.paused = not mouse.paused
 
 # Toggle for enabling force vector on puck
 def PuckForceDirectionToggler(checkbox):
@@ -524,16 +533,18 @@ def PuckVelocityDirectionToggler(checkbox):
         levels[mouse.level].puck.velocityVector.visible = True
     else:
         levels[mouse.level].puck.velocityVector.visible = False
-    
 
 #Declarations: our charge holders where you can drag charges from and or mouse and startMenu classes
 arena = Arena()
 positiveChargeHolder = ChargeHolder(vector(160, 115, 0), 1)
 negativeChargeHolder = ChargeHolder(vector(185, 115, 0), -1)
+
+positiveChargeHolder.text.visible = True
+negativeChargeHolder.text.visible = True
+
 mouse = StupidMouse()
 start = StartMenu()
 mouseFollower = MouseFollower(-1)
-
 
 # Levels (list)
 levels = []
@@ -560,8 +571,11 @@ wtext(text="\n\nPuck Mass")
 slider(bind=changePuckMass, min=1, max=10, step=1, pos=scene.caption_anchor)
 wtext(text="\n\nCoefficient of Friction (0 means none)")
 slider(bind=changeFriction, min=0, max=0.1, step=0.01, pos=scene.caption_anchor)
+wtext(text="\n\n")
 button(bind=resetLevel, text="Reset Level", pos=scene.caption_anchor)
 button(bind=nextLevel, text="Next Level")
+button(bind=togglePause, text="Go/Stop")
+
 while(True):
     rate(runRate)
     if (mouse.gameMode == "Homescreen"):
@@ -570,30 +584,28 @@ while(True):
         start.bg.visible = True
         start.play.visible = True
     if (mouse.gameMode == "Simulation"):
+        if (mouse.level >= len(levels)):
+            mouse.level = -1
+            for lev in levels:
+                lev.startLevel(mouse.gameMode)
+            mouse.level = 0
+            mouse.gameMode = "Homescreen"
+            levels = []
+            addLevels()
+        if (mouse.paused == False):
+            for object in levels[mouse.level].forceCreatorsList:           
+                levels[mouse.level].puck.update(object, levels[mouse.level].obstacles, levels[mouse.level].chargeList, levels[mouse.level].goal)
+            if (levels[mouse.level].goal.inGoal(levels[mouse.level].puck)):
+                mouse.gameMode = "GOAL"
+                mouse.level = mouse.level + 1
+                electricField = ElectricField(levels[mouse.level].forceCreatorsList)
+        
         levelCounter.text = (mouse.level + 1)
-        puckSize.text = levels[mouse.level].puck.shape.radius
-        positiveChargeHolder.text.visible = True
-        negativeChargeHolder.text.visible = True
-        mouseFollower.update(levels[mouse.level].puck.position)
-
         for lev in levels:
             lev.startLevel(mouse.gameMode)
-        for object in levels[mouse.level].forceCreatorsList:           
-            levels[mouse.level].puck.update(object, levels[mouse.level].obstacles, levels[mouse.level].chargeList, levels[mouse.level].goal)
-        if (levels[mouse.level].goal.inGoal(levels[mouse.level].puck)):
-            mouse.gameMode = "GOAL"
-            mouse.level = mouse.level + 1
-
-            if (mouse.level >= len(levels)):
-                mouse.level = -1
-                for lev in levels:
-                    lev.startLevel(mouse.gameMode)
-                mouse.level = 0
-                mouse.gameMode = "Homescreen"
-                levels = []
-                addLevels()
-            electricField = ElectricField(levels[mouse.level].forceCreatorsList)
             
+        puckSize.text = levels[mouse.level].puck.shape.radius
+        mouseFollower.update(levels[mouse.level].puck.position)
     if (mouse.gameMode == "GOAL"):
             goalAnimation.update()
 
