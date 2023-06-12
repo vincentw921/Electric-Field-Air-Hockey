@@ -572,7 +572,7 @@ slider(bind=changePuckMass, min=1, max=10, step=1, pos=scene.caption_anchor)
 puckMass = wtext(text=levels[mouse.level].puck.mass)
 
 wtext(text="\n\nCoefficient of Friction (0 means none)")
-slider(bind=changeFriction, min=0, max=0.1, step=0.01, pos=scene.caption_anchor)
+slider(bind=changeFriction, min=0, max=0.1, step=0.001, pos=scene.caption_anchor)
 coeffF = wtext(text=levels[mouse.level].puck.friction)
 
 wtext(text="\n\n")
