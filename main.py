@@ -146,11 +146,12 @@ class Puck:
 
 # Class for the charges
 class Charges:
-    def __init__(self, position, charge, chargeColor, showField):
+    def __init__(self, position, charge, chargeColor, showField, listPosition):
         self.position = position
         self.charge = charge
         self.shape = cylinder(pos=self.position, axis=vector(0,0,1), radius=5, color=chargeColor)
         self.showField = showField
+        self.listPosition = listPosition
         
     # Calculate the electric field at a point
     def calculateElectricField(self, point):
@@ -237,11 +238,12 @@ class BoxObstacle(Obstacles):
     
 # Holds the obstacle that prevents the ball from going into charges
 class chargeObstacle():
-    def __init__(self, position, charge, radius, color):
+    def __init__(self, position, charge, radius, color, listPosition):
         self.position = position
         self.charge = charge
         self.radius = radius
         self.shape = cylinder(pos=self.position, axis=vector(0,0,1), radius = radius, color=color)
+        self.listPosition = listPosition
 
 # Goal
 class Goal:
@@ -327,6 +329,16 @@ class Arena():
 def mouseDownEventHandler():
     #if mouse is in the charge box and mousedown is pressed
     if (mouse.gameMode == "Simulation"):
+        for obstacle in levels[mouse.level].chargeList:
+            if (scene.mouse.pos.x < obstacle.position.x + 5 and scene.mouse.pos.x > obstacle.position.x - 5 and scene.mouse.pos.y < obstacle.position.y + 5 and scene.mouse.pos.y > obstacle.position.y - 5):
+                obstacle.shape.visible = False
+                levels[mouse.level].chargeList.remove(obstacle)
+                
+        for charge in levels[mouse.level].forceCreatorsList:
+            if (scene.mouse.pos.x < charge.position.x + 5 and scene.mouse.pos.x > charge.position.x - 5 and scene.mouse.pos.y < charge.position.y + 5 and scene.mouse.pos.y > charge.position.y - 5):
+                charge.shape.visible = False
+                levels[mouse.level].forceCreatorsList.remove(charge)
+        
         if (scene.mouse.pos.x < positiveChargeHolder.position.x + 10 and scene.mouse.pos.x > positiveChargeHolder.position.x - 10 and scene.mouse.pos.y < positiveChargeHolder.position.y + 10 and scene.mouse.pos.y > positiveChargeHolder.position.y - 10):
             mouse.picked = True
             mouse.currCharge = "Positive"
@@ -346,17 +358,17 @@ def mouseDownEventHandler():
 def mouseUpEventHandler():
     if (mouse.gameMode == "Simulation"):
         if (mouse.picked and mouse.currCharge == "Positive"):
-            levels[mouse.level].forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 1 * pow(10, -3), color.red, True))
+            levels[mouse.level].forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 1 * pow(10, -3), color.red, True, len(levels[mouse.level].forceCreatorsList)))
             levels[mouse.level].updateElectricField()
-            levels[mouse.level].chargeList.append(chargeObstacle(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 0, 5, color.red))
+            levels[mouse.level].chargeList.append(chargeObstacle(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 0, 5, color.red, len(levels[mouse.level].chargeList)))
             mouseFollower.circle.visible = False
             mouseFollower.velocity.visible = False
 
             mouse.picked = False
         elif (mouse.picked and mouse.currCharge == "Negative"):
-            levels[mouse.level].forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), -1 * pow(10, -3), color.blue, True))
+            levels[mouse.level].forceCreatorsList.append(Charges(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), -1 * pow(10, -3), color.blue, True, len(levels[mouse.level].forceCreatorsList)))
             levels[mouse.level].updateElectricField()
-            levels[mouse.level].chargeList.append(chargeObstacle(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 0, 5, color.blue))
+            levels[mouse.level].chargeList.append(chargeObstacle(vector(scene.mouse.pos.x, scene.mouse.pos.y, 0), 0, 5, color.blue, len(levels[mouse.level].chargeList)))
             mouseFollower.circle.visible = False
             mouseFollower.velocity.visible = False
 
