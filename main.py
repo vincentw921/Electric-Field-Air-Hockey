@@ -163,6 +163,7 @@ class Charges:
 # Class for the electric field
 class ElectricField:
     def __init__(self):
+        self.noOpacity = True
         self.arrowList = []
         self.createElectricField()
                 
@@ -208,7 +209,10 @@ class ElectricField:
                         forceVector = forceVector + object.calculateElectricField(vector(x, y, 0))
                     self.arrowList[pos].axis = forceVector
                     # print(mag(forceVector))
-                    self.arrowList[pos].opacity = mag(forceVector) / greatestMag
+                    if (not self.noOpacity): 
+                        self.arrowList[pos].opacity = mag(forceVector) / greatestMag
+                    else:
+                        self.arrowList[pos].opacity = 1
                     self.arrowList[pos].length = 15
                     pos += 1
 
@@ -537,6 +541,14 @@ def PuckVelocityDirectionToggler(checkbox):
     else:
         levels[mouse.level].puck.velocityVector.visible = False
 
+def OpacityToggler(checkbox):
+    if (checkbox.checked):
+        levels[mouse.level].electricField.noOpacity = False
+        levels[mouse.level].updateElectricField()
+    else:
+        levels[mouse.level].electricField.noOpacity = True
+        levels[mouse.level].updateElectricField()
+
 #Declarations: our charge holders where you can drag charges from and or mouse and startMenu classes
 arena = Arena()
 positiveChargeHolder = ChargeHolder(vector(160, 115, 0), 1)
@@ -563,14 +575,21 @@ scene.bind("mouseup", mouseUpEventHandler)
 scene.bind("click", mouseClickHandler)
 wtext(text="Level: ")
 levelCounter = wtext(text=mouse.level)
+wtext(text="\n")
 
-checkbox(bind=ElectricFieldToggler, text="Show Electric Field")
-checkbox(bind=PuckForceDirectionToggler, text="Show Force Vector on Puck")
-checkbox(bind=PuckVelocityDirectionToggler, text="Show Velocity Vector on Puck")
-wtext(text="\n\nPuck Size")
+button(bind=resetLevel, text="Reset Level", pos=scene.caption_anchor)
+button(bind=nextLevel, text="Next Level")
+button(bind=togglePause, text="Go/Stop")
+wtext(text="\n\n")
+
+checkbox(bind=ElectricFieldToggler, text="Show Electric Field\n")
+checkbox(bind=OpacityToggler, text="Enable Opacity for Electric Field\n")
+checkbox(bind=PuckForceDirectionToggler, text="Show Force Vector on Puck\n")
+checkbox(bind=PuckVelocityDirectionToggler, text="Show Velocity Vector on Puck\n")
+wtext(text="\nPuck Size")
 slider(bind=changePuckSize, min=5, max=10, step=1, pos=scene.caption_anchor)
 puckSize = wtext(text=levels[mouse.level].puck.shape.radius)
-wtext(text="\n\nPuck Mass")
+wtext(text="\nPuck Mass")
 slider(bind=changePuckMass, min=1, max=10, step=1, pos=scene.caption_anchor)
 puckMass = wtext(text=levels[mouse.level].puck.mass)
 
@@ -578,15 +597,11 @@ wtext(text="\n\nCoefficient of Friction (0 means none)")
 slider(bind=changeFriction, min=0, max=0.1, step=0.001, pos=scene.caption_anchor)
 coeffF = wtext(text=levels[mouse.level].puck.friction)
 
-wtext(text="\n\n")
-button(bind=resetLevel, text="Reset Level", pos=scene.caption_anchor)
-button(bind=nextLevel, text="Next Level")
-button(bind=togglePause, text="Go/Stop")
 wtext(text="\nForce Vector: ")
-forceV = wtext(text=levels[mouse.level].puck.forceVector)
+forceV = wtext(text=0 if mouse.gameMode != "Simulation" else levels[mouse.level].puck.forceVector)
 
 wtext(text="\nVelocity Vector: ")
-veloV = wtext(text=levels[mouse.level].puck.velocityVector)
+veloV = wtext(text=0 if mouse.gameMode != "Simulation" else levels[mouse.level].puck.velocityVector)
 
 while(True):
     rate(runRate)
